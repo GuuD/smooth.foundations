@@ -51,6 +51,12 @@
     <Compile Include="Foundations\Algebraics\Tuple.cs" />
     <Compile Include="Foundations\Algebraics\Union.cs" />
     <Compile Include="Foundations\Algebraics\Unit.cs" />
+    <Compile Include="Foundations\PatternMatching\RefactoredMatcher\GeneralMatcher.cs" />
+    <Compile Include="Foundations\PatternMatching\RefactoredMatcher\GeneralMatcherResult.cs" />
+    <Compile Include="Foundations\PatternMatching\RefactoredMatcher\IMatcher.cs" />
+    <Compile Include="Foundations\PatternMatching\RefactoredMatcher\IWhereHandler.cs" />
+    <Compile Include="Foundations\PatternMatching\RefactoredMatcher\IWithHandler.cs" />
+    <Compile Include="Foundations\PatternMatching\RefactoredMatcher\Resolver.cs" />
     <Compile Include="Foundations\PatternMatching\ValueOrError\Action\ErrorMatcher.cs" />
     <Compile Include="Foundations\PatternMatching\ValueOrError\Action\ValueMatcher.cs" />
     <Compile Include="Foundations\Algebraics\ValueOrError.cs" />

@@ -170,7 +170,28 @@ namespace Smooth.Delegates {
 			return func(first, t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7, t.Item8);
 		}
 
-		#endregion
+        #endregion
 
-	}
+        #region Predicates
+
+	    public static bool Call<T1>(this Predicate<T1> predicate, Tuple<T1> tuple)
+	    {
+	        return predicate(tuple.Item1);
+	    }
+        public static bool Call<T1, T2>(this Predicate<T1, T2> predicate, Tuple<T1, T2> tuple)
+        {
+            return predicate(tuple.Item1, tuple.Item2);
+        }
+        public static bool Call<T1, T2, T3>(this Predicate<T1, T2, T3> predicate, Tuple<T1, T2, T3> tuple)
+        {
+            return predicate(tuple.Item1, tuple.Item2, tuple.Item3);
+        }
+        public static bool Call<T1, T2, T3, T4>(this Predicate<T1, T2, T3, T4> predicate, Tuple<T1, T2, T3, T4> tuple)
+        {
+            return predicate(tuple.Item1, tuple.Item2, tuple.Item3, tuple.Item4);
+        }
+
+        #endregion
+
+    }
 }

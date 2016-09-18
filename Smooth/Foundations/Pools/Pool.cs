@@ -1,7 +1,7 @@
-using System;
 using System.Collections.Generic;
 using Smooth.Delegates;
 using Smooth.Dispose;
+using Smooth.Slinq;
 
 namespace Smooth.Pools {
 	/// <summary>
@@ -33,6 +33,16 @@ namespace Smooth.Pools {
 				return values.Count > 0 ? values.Pop() : create();
 			}
 		}
+
+	    public T BorrowConditional(Predicate<T> predicate, DelegateFunc<T> createSatisfying)
+	    {
+	        lock (values)
+	        {
+	            return values.Slinq()
+                    .FirstOrNone((v, p) => p(v), predicate)
+                    .ValueOr(createSatisfying());
+	        }
+	    }
 		
 		/// <summary>
 		/// Relinquishes ownership of the specified value and returns it to the pool.
