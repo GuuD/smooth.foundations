@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Smooth.Algebraics;
 using Smooth.Pools;
 using Smooth.Slinq;
+using Smooth.Delegates;
 
 namespace Smooth.Foundations.PatternMatching.RefactoredMatcher
 {
@@ -15,11 +16,11 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher
             Predicate = 1 << 1
         }
 
-        private readonly Predicate<T> _predicate;
+        private readonly Delegates.Predicate<T> _predicate;
         private Option<Either<T, List<T>>> _value; 
         private readonly ConditionType _conditionType;
 
-        internal Condition(Predicate<T> predicate) : this()
+        internal Condition(Delegates.Predicate<T> predicate) : this()
         {
             _predicate = predicate;
             _conditionType = ConditionType.Predicate;;
@@ -36,10 +37,18 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher
             _value = Either<T, List<T>>.Right(values).ToSome();
             _conditionType = ConditionType.Value;
         }
-        internal Condition(Predicate<T> predicate, T value) : this()
+
+        internal Condition(Delegates.Predicate<T> predicate, T value) : this()
         {
             _predicate = predicate;
             _value = Either<T, List<T>>.Left(value).ToSome();
+            _conditionType = ConditionType.Predicate | ConditionType.Value;
+        }
+
+        internal Condition(Delegates.Predicate<T> predicate, List<T> values) : this()
+        {
+            _predicate = predicate;
+            _value = Either<T, List<T>>.Right(values).ToSome();
             _conditionType = ConditionType.Predicate | ConditionType.Value;
         }
 
