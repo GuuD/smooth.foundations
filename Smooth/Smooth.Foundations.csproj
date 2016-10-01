@@ -14,11 +14,12 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
+    <Optimize>true</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -51,12 +52,17 @@
     <Compile Include="Foundations\Algebraics\Tuple.cs" />
     <Compile Include="Foundations\Algebraics\Union.cs" />
     <Compile Include="Foundations\Algebraics\Unit.cs" />
+    <Compile Include="Foundations\PatternMatching\RefactoredMatcher\Condition.cs" />
     <Compile Include="Foundations\PatternMatching\RefactoredMatcher\GeneralMatcher.cs" />
     <Compile Include="Foundations\PatternMatching\RefactoredMatcher\GeneralMatcherResult.cs" />
     <Compile Include="Foundations\PatternMatching\RefactoredMatcher\IMatcher.cs" />
     <Compile Include="Foundations\PatternMatching\RefactoredMatcher\IWhereHandler.cs" />
     <Compile Include="Foundations\PatternMatching\RefactoredMatcher\IWithHandler.cs" />
     <Compile Include="Foundations\PatternMatching\RefactoredMatcher\Resolver.cs" />
+    <Compile Include="Foundations\PatternMatching\RefactoredMatcher\Structs\MatcherDelegates.cs" />
+    <Compile Include="Foundations\PatternMatching\RefactoredMatcher\Structs\WhereMatcher.cs" />
+    <Compile Include="Foundations\PatternMatching\RefactoredMatcher\Structs\WithMatcher.cs" />
+    <Compile Include="Foundations\PatternMatching\RefactoredMatcher\Structs\ExecutableMatcher.cs" />
     <Compile Include="Foundations\PatternMatching\ValueOrError\Action\ErrorMatcher.cs" />
     <Compile Include="Foundations\PatternMatching\ValueOrError\Action\ValueMatcher.cs" />
     <Compile Include="Foundations\Algebraics\ValueOrError.cs" />
@@ -188,6 +194,7 @@
   <ItemGroup>
     <None Include="Foundations\Slinq\Test\SlinqTest.unity" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
   <ProjectExtensions>
     <VisualStudio AllowExistingFolder="true" />
