@@ -36,42 +36,35 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
         private List<T> _values;
         private DelegateAction<T> _action;
 
-        private bool _evaluated;
-
         public WithMatcher<T, TMatcher> Or(T value)
         {
             _values.Add(value);
             return this;
         }
 
-        public ExecutableMatcher<T, WithMatcher<T, TMatcher>> Do(DelegateAction<T> action)
+        public GeneralMatcher<T, WithMatcher<T, TMatcher>> Do(DelegateAction<T> action)
         {
             _action = action;
-            return ExecutableMatcher<T, WithMatcher<T, TMatcher>>.Create(ref this, WithValueProvider, WithEvaluator);
+            return GeneralMatcher<T, WithMatcher<T, TMatcher>>.Create(ref this, WithValueProvider, WithEvaluator);
         }
 
-        public ExecutableMatcher<T, WithMatcherParam<T, TMatcher, TActionParam>> Do<TActionParam>(DelegateAction<T, TActionParam> action,
+        public GeneralMatcher<T, WithMatcherParam<T, TMatcher, TActionParam>> Do<TActionParam>(DelegateAction<T, TActionParam> action,
             TActionParam param)
         {
             var proxy = WithMatcherParam<T, TMatcher, TActionParam>.Create(ref _previous, _extractor, _evaluator, _values,
                 action, param);
             var vp = WithMatcherParam<T, TMatcher, TActionParam>.WithValueProvider;
             var e = WithMatcherParam<T, TMatcher, TActionParam>.WithEvaluator;
-            return ExecutableMatcher<T, WithMatcherParam<T, TMatcher, TActionParam>>.Create(ref proxy, vp, e);
+            return GeneralMatcher<T, WithMatcherParam<T, TMatcher, TActionParam>>.Create(ref proxy, vp, e);
         }
 
-        private static Option<bool> Evaluate(ref WithMatcher<T, TMatcher> matcher)
+        private static bool Evaluate(ref WithMatcher<T, TMatcher> matcher)
         {
-            if (matcher._evaluated)
-            {
-                return Option<bool>.None;
-            }
-
             var m = matcher._previous;
             var intermediateResult = matcher._evaluator(ref m);
-            if (intermediateResult.isSome)
+            if (intermediateResult)
             {
-                return intermediateResult;
+                return true;
             }
 
             T value;
@@ -82,8 +75,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
                 matcher._action(value);
             }
             ListPool<T>.Instance.Release(matcher._values);
-            matcher._evaluated = true;
-            return result.ToSome();
+            return result;
         }
         private static void GetValue(ref WithMatcher<T, TMatcher> matcher, out T value)
         {
@@ -123,20 +115,13 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
         private DelegateAction<T, TActionParam> _action;
         private TActionParam _param;
 
-        private bool _evaluated;
-
-        private static Option<bool> Evaluate(ref WithMatcherParam<T, TMatcher, TActionParam> matcher)
+        private static bool Evaluate(ref WithMatcherParam<T, TMatcher, TActionParam> matcher)
         {
-            if (matcher._evaluated)
-            {
-                return Option<bool>.None;
-            }
-
             var m = matcher._previous;
             var intermediateResult = matcher._evaluator(ref m);
-            if (intermediateResult.isSome)
+            if (intermediateResult)
             {
-                return intermediateResult;
+                return true;
             }
 
             T value;
@@ -147,8 +132,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
                 matcher._action(value, matcher._param);
             }
             ListPool<T>.Instance.Release(matcher._values);
-            matcher._evaluated = true;
-            return result.ToSome();
+            return result;
         }
         private static void GetValue(ref WithMatcherParam<T, TMatcher, TActionParam> matcher, out T value)
         {
