@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Smooth.Delegates;
 using Smooth.Foundations.PatternMatching.ValueOrError;
 using Smooth.Foundations.PatternMatching.ValueOrError.Function;
 
@@ -35,7 +36,7 @@ namespace Smooth.Foundations.Algebraics
 
         public static ValueOrError<T> FromValue(T value)
         {
-            return new ValueOrError<T>(value, string.Empty, false);
+            return new ValueOrError<T>(value, null, false);
         }
 
         public static ValueOrError<T> FromError(string error)
@@ -51,49 +52,49 @@ namespace Smooth.Foundations.Algebraics
         }
 
 
-        public ValueOrError<TResult> ContinueWith<TResult>(Func<ValueOrError<TResult>> func)
+        public ValueOrError<TResult> ContinueWith<TResult>(DelegateFunc<ValueOrError<TResult>> func)
         {
             return IsError
                 ? ValueOrError<TResult>.FromError(Error)
                 : func();
         }
 
-        public ValueOrError<TResult> ContinueWith<TResult, T1>(Func<T1, ValueOrError<TResult>> func, T1 arg)
+        public ValueOrError<TResult> ContinueWith<TResult, T1>(DelegateFunc<T1, ValueOrError<TResult>> func, T1 arg)
         {
             return IsError
                 ? ValueOrError<TResult>.FromError(Error)
                 : func(arg);
         }
 
-        public ValueOrError<TResult> ContinueWith<TResult>(Func<ValueOrError<T>, ValueOrError<TResult>> func)
+        public ValueOrError<TResult> ContinueWith<TResult>(DelegateFunc<ValueOrError<T>, ValueOrError<TResult>> func)
         {
             return IsError
                 ? ValueOrError<TResult>.FromError(Error)
                 : func(this);
         }
 
-        public ValueOrError<TResult> ContinueWith<TResult, T1>(Func<ValueOrError<T>, T1, ValueOrError<TResult>> func, T1 arg)
+        public ValueOrError<TResult> ContinueWith<TResult, T1>(DelegateFunc<ValueOrError<T>, T1, ValueOrError<TResult>> func, T1 arg)
         {
             return IsError
                 ? ValueOrError<TResult>.FromError(Error)
                 : func(this, arg);
         }
 
-        public ValueOrError<TResult> ContinueWith<TResult>(Func<T, ValueOrError<TResult>> func)
+        public ValueOrError<TResult> ContinueWith<TResult>(DelegateFunc<T, ValueOrError<TResult>> func)
         {
             return IsError
                 ? ValueOrError<TResult>.FromError(Error)
                 : func(Value);
         }
 
-        public ValueOrError<TResult> ContinueWith<TResult, T1>(Func<T, T1, ValueOrError<TResult>> func, T1 arg)
+        public ValueOrError<TResult> ContinueWith<TResult, T1>(DelegateFunc<T, T1, ValueOrError<TResult>> func, T1 arg)
         {
             return IsError
                 ? ValueOrError<TResult>.FromError(Error)
                 : func(Value, arg);
         }
 
-        public ValueOrError<TResult> ContinueWith<TResult>(Func<T, TResult> func)
+        public ValueOrError<TResult> ContinueWith<TResult>(DelegateFunc<T, TResult> func)
         {
             if (IsError)
             {
@@ -109,7 +110,7 @@ namespace Smooth.Foundations.Algebraics
             }
         }
 
-        public ValueOrError<TResult> ContinueWith<TResult, T1>(Func<T, T1, TResult> func, T1 arg)
+        public ValueOrError<TResult> ContinueWith<TResult, T1>(DelegateFunc<T, T1, TResult> func, T1 arg)
         {
             if (IsError)
             {

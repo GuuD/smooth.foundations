@@ -65,8 +65,8 @@ namespace Smooth.Algebraics
 
 		public readonly T1 Item1;
 
-		public Tuple(T1 Item1) {
-			this.Item1 = Item1;
+		public Tuple(T1 item1) {
+			this.Item1 = item1;
 		}
 
 		public override bool Equals(object o) {
@@ -129,9 +129,9 @@ namespace Smooth.Algebraics
 		public readonly T1 Item1;
 		public readonly T2 Item2;
 
-		public Tuple(T1 Item1, T2 Item2) {
-			this.Item1 = Item1;
-			this.Item2 = Item2;
+		public Tuple(T1 item1, T2 item2) {
+			this.Item1 = item1;
+			this.Item2 = item2;
 		}
 
 		public override bool Equals(object o) {
@@ -357,12 +357,12 @@ namespace Smooth.Algebraics
 		public readonly T4 Item4;
 		public readonly T5 Item5;
 
-		public Tuple(T1 Item1, T2 Item2, T3 Item3, T4 Item4, T5 Item5) {
-            this.Item1 = Item1;
-		    this.Item2 = Item2;
-			this.Item3 = Item3;
-			this.Item4 = Item4;
-			this.Item5 = Item5;
+		public Tuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5) {
+            this.Item1 = item1;
+		    this.Item2 = item2;
+			this.Item3 = item3;
+			this.Item4 = item4;
+			this.Item5 = item5;
 		}
 		
 		public override bool Equals(object o) {
@@ -443,13 +443,13 @@ namespace Smooth.Algebraics
 		public readonly T5 Item5;
 		public readonly T6 Item6;
 
-		public Tuple(T1 Item1, T2 Item2, T3 Item3, T4 Item4, T5 Item5, T6 Item6) {
-			this.Item1 = Item1;
-			this.Item2 = Item2;
-			this.Item3 = Item3;
-			this.Item4 = Item4;
-			this.Item5 = Item5;
-			this.Item6 = Item6;
+		public Tuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6) {
+			this.Item1 = item1;
+			this.Item2 = item2;
+			this.Item3 = item3;
+			this.Item4 = item4;
+			this.Item5 = item5;
+			this.Item6 = item6;
 		}
 		
 		public override bool Equals(object o) {
@@ -534,14 +534,14 @@ namespace Smooth.Algebraics
 		public readonly T6 Item6;
 		public readonly T7 Item7;
 
-		public Tuple(T1 Item1, T2 Item2, T3 Item3, T4 Item4, T5 Item5, T6 Item6, T7 Item7) {
-			this.Item1 = Item1;
-			this.Item2 = Item2;
-			this.Item3 = Item3;
-			this.Item4 = Item4;
-			this.Item5 = Item5;
-			this.Item6 = Item6;
-			this.Item7 = Item7;
+		public Tuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6, T7 item7) {
+			this.Item1 = item1;
+			this.Item2 = item2;
+			this.Item3 = item3;
+			this.Item4 = item4;
+			this.Item5 = item5;
+			this.Item6 = item6;
+			this.Item7 = item7;
 		}
 		
 		public override bool Equals(object o) {
@@ -630,15 +630,15 @@ namespace Smooth.Algebraics
 		public readonly T7 Item7;
 		public readonly T8 Item8;
 
-		public Tuple(T1 Item1, T2 Item2, T3 Item3, T4 Item4, T5 Item5, T6 Item6, T7 Item7, T8 Item8) {
-			this.Item1 = Item1;
-			this.Item2 = Item2;
-			this.Item3 = Item3;
-			this.Item4 = Item4;
-			this.Item5 = Item5;
-			this.Item6 = Item6;
-			this.Item7 = Item7;
-			this.Item8 = Item8;
+		public Tuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6, T7 item7, T8 item8) {
+			this.Item1 = item1;
+			this.Item2 = item2;
+			this.Item3 = item3;
+			this.Item4 = item4;
+			this.Item5 = item5;
+			this.Item6 = item6;
+			this.Item7 = item7;
+			this.Item8 = item8;
 		}
 		
 		public override bool Equals(object o) {
@@ -731,16 +731,16 @@ namespace Smooth.Algebraics
 		public readonly T8 Item8;
 		public readonly T9 Item9;
 
-		public Tuple(T1 Item1, T2 Item2, T3 Item3, T4 Item4, T5 Item5, T6 Item6, T7 Item7, T8 Item8, T9 Item9) {
-			this.Item1 = Item1;
-			this.Item2 = Item2;
-			this.Item3 = Item3;
-			this.Item4 = Item4;
-			this.Item5 = Item5;
-			this.Item6 = Item6;
-			this.Item7 = Item7;
-			this.Item8 = Item8;
-			this.Item9 = Item9;
+		public Tuple(T1 item1, T2 item2, T3 item3, T4 item4, T5 item5, T6 item6, T7 item7, T8 item8, T9 item9) {
+			this.Item1 = item1;
+			this.Item2 = item2;
+			this.Item3 = item3;
+			this.Item4 = item4;
+			this.Item5 = item5;
+			this.Item6 = item6;
+			this.Item7 = item7;
+			this.Item8 = item8;
+			this.Item9 = item9;
 		}
 		
 		public override bool Equals(object o) {
