@@ -12,14 +12,14 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
     public struct WithMatcher<T, TMatcher>
     {
         internal static WithMatcher<T, TMatcher> Create(ref TMatcher previousMatcher,
-                                                        ValueProvider<T, TMatcher> extractor,
+                                                        ValueProvider<T, TMatcher> valueProvider,
                                                         Evaluator<TMatcher> evaluator, 
                                                         T value)
         {
             var matcher = new WithMatcher<T, TMatcher>
             {
                 _values = ListPool<T>.Instance.BorrowConditional(l => l.Capacity >= 4, () => new List<T>(6)),
-                _extractor = extractor,
+                _valueProvider = valueProvider,
                 _evaluator = evaluator,
                 _previous = previousMatcher
             };
@@ -30,7 +30,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
         private static readonly ValueProvider<T, WithMatcher<T, TMatcher>> WithValueProvider = GetValue;
 
         private Evaluator<TMatcher> _evaluator;
-        private ValueProvider<T, TMatcher> _extractor;
+        private ValueProvider<T, TMatcher> _valueProvider;
         private TMatcher _previous;
 
         private List<T> _values;
@@ -51,7 +51,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
         public GeneralMatcher<T, WithMatcherParam<T, TMatcher, TActionParam>> Do<TActionParam>(DelegateAction<T, TActionParam> action,
             TActionParam param)
         {
-            var proxy = WithMatcherParam<T, TMatcher, TActionParam>.Create(ref _previous, _extractor, _evaluator, _values,
+            var proxy = WithMatcherParam<T, TMatcher, TActionParam>.Create(ref _previous, _valueProvider, _evaluator, _values,
                 action, param);
             var vp = WithMatcherParam<T, TMatcher, TActionParam>.WithValueProvider;
             var e = WithMatcherParam<T, TMatcher, TActionParam>.WithEvaluator;
@@ -68,7 +68,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
             }
 
             T value;
-            matcher._extractor(ref m, out value);         
+            matcher._valueProvider(ref m, out value);         
             var result = matcher._values.Slinq().Contains(value);
             if (result)
             {
@@ -79,7 +79,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
         }
         private static void GetValue(ref WithMatcher<T, TMatcher> matcher, out T value)
         {
-            matcher._extractor(ref matcher._previous, out value);
+            matcher._valueProvider(ref matcher._previous, out value);
         }
     }
     #endregion
@@ -88,7 +88,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
     public struct WithMatcherParam<T, TMatcher, TActionParam>
     {
         internal static WithMatcherParam<T, TMatcher, TActionParam> Create(ref TMatcher previousMatcher,
-                                                                      ValueProvider<T, TMatcher> extractor,
+                                                                      ValueProvider<T, TMatcher> valueProvider,
                                                                       Evaluator<TMatcher> evaluator,
                                                                       List<T> values,
                                                                       DelegateAction<T, TActionParam> action,
@@ -97,7 +97,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
             var matcher = new WithMatcherParam<T, TMatcher, TActionParam>
             {
                 _values = values,
-                _extractor = extractor,
+                _valueProvider = valueProvider,
                 _evaluator = evaluator,
                 _previous = previousMatcher,
                 _action = action,
@@ -109,7 +109,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
         internal static readonly ValueProvider<T, WithMatcherParam<T, TMatcher, TActionParam>> WithValueProvider = GetValue;
 
         private Evaluator<TMatcher> _evaluator;
-        private ValueProvider<T, TMatcher> _extractor;
+        private ValueProvider<T, TMatcher> _valueProvider;
         private TMatcher _previous;
         private List<T> _values;
         private DelegateAction<T, TActionParam> _action;
@@ -125,7 +125,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
             }
 
             T value;
-            matcher._extractor(ref m, out value);
+            matcher._valueProvider(ref m, out value);
             var result = matcher._values.Slinq().Contains(value);
             if (result)
             {
@@ -136,7 +136,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
         }
         private static void GetValue(ref WithMatcherParam<T, TMatcher, TActionParam> matcher, out T value)
         {
-            matcher._extractor(ref matcher._previous, out value);
+            matcher._valueProvider(ref matcher._previous, out value);
         }
     }
     #endregion

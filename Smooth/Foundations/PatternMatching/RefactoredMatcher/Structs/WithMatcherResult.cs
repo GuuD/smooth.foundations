@@ -12,14 +12,14 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
     public struct WithMatcherResult<T, TMatcher, TResult>
     {
         internal static WithMatcherResult<T, TMatcher, TResult> Create(ref TMatcher previousMatcher,
-                                                        ValueProvider<T, TMatcher> extractor,
+                                                        ValueProvider<T, TMatcher> valueProvider,
                                                         Evaluator<TMatcher, TResult> evaluator,
                                                         T value)
         {
             var matcher = new WithMatcherResult<T, TMatcher, TResult>
             {
                 _values = ListPool<T>.Instance.BorrowConditional(l => l.Capacity >= 4, () => new List<T>(6)),
-                _valueProvider = extractor,
+                _valueProvider = valueProvider,
                 _evaluator = evaluator,
                 _previous = previousMatcher
             };
@@ -103,7 +103,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
     public struct WithMatcherResultParam<T, TMatcher, TFuncParam, TResult>
     {
         internal static WithMatcherResultParam<T, TMatcher, TFuncParam, TResult> Create(ref TMatcher previousMatcher,
-                                                        ValueProvider<T, TMatcher> extractor,
+                                                        ValueProvider<T, TMatcher> valueProvider,
                                                         Evaluator<TMatcher, TResult> evaluator,
                                                         List<T> values,
                                                         DelegateFunc<T, TFuncParam, TResult> func,
@@ -112,7 +112,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
             var matcher = new WithMatcherResultParam<T, TMatcher, TFuncParam, TResult>
             {
                 _values = values,
-                _valueProvider = extractor,
+                _valueProvider = valueProvider,
                 _evaluator = evaluator,
                 _previous = previousMatcher,
                 _func = func,

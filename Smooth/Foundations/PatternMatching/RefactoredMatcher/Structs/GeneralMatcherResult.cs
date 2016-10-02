@@ -1,7 +1,26 @@
-﻿using Smooth.PatternMatching.MatcherDelegates;
+﻿using System.CodeDom;
+using Smooth.Algebraics;
+using Smooth.Delegates;
+using Smooth.PatternMatching.MatcherDelegates;
 
 namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
 {
+
+    internal struct BasicContainerResult<T, TResult>
+    {
+        internal static BasicContainerResult<T, TResult> Create(T value)
+        {
+            return new BasicContainerResult<T, TResult> {_value = value};
+        } 
+        internal static ValueProvider<T, BasicContainerResult<T, TResult>> Provider = (ref BasicContainerResult<T, TResult> matcher, out T value) => value = matcher._value;
+        internal static Evaluator<BasicContainerResult<T, TResult>, TResult> Evaluator = (ref BasicContainerResult<T, TResult> previous, out TResult result) =>
+        {
+            result = default(TResult);
+            return false;
+        };
+        private T _value;
+    }
+
     public struct GeneralMatcherResult<T, TMatcher, TResult>
     {
         private Evaluator<TMatcher, TResult> _evaluator;
@@ -20,125 +39,136 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
             };
         }
 
-        //public WhereMatcher<T, TMatcher> Where(Predicate<T> predicate)
-        //{
-        //    return WhereMatcher<T, TMatcher>.Create(ref _previous, _valueProvider, _evaluator, predicate);
-        //}
+        public WhereMatcherResult<T, TMatcher, TResult> Where(Predicate<T> predicate)
+        {
+            return WhereMatcherResult<T, TMatcher, TResult>.Create(ref _previous, _valueProvider, _evaluator, predicate);
+        }
 
-        //public WhereMatcher<T, TMatcher, P> Where<P>(Predicate<T, P> predicate, P param)
-        //{
-        //    return WhereMatcher<T, TMatcher, P>.Create(ref _previous, _valueProvider, _evaluator, predicate, param);
-        //}
+        public WhereMatcherResult<T, TMatcher, TPredicateParam, TResult> Where<TPredicateParam>(Predicate<T, TPredicateParam> predicate, TPredicateParam param)
+        {
+            return WhereMatcherResult<T, TMatcher, TPredicateParam, TResult>.Create(ref _previous, _valueProvider, _evaluator, predicate, param);
+        }
 
-        //public WithMatcher<T, TMatcher> With(T value)
-        //{
-        //    return WithMatcher<T, TMatcher>.Create(ref _previous, _valueProvider, _evaluator, value);
-        //}
+        public WithMatcherResult<T, TMatcher, TResult> With(T value)
+        {
+            return WithMatcherResult<T, TMatcher, TResult>.Create(ref _previous, _valueProvider, _evaluator, value);
+        }
 
-        //public ExecutableMatcherAfterElse<T, TMatcher> Else(DelegateAction<T> elseAction)
-        //{
-        //    return ExecutableMatcherAfterElse<T, TMatcher>.Create(ref _previous, _valueProvider, _evaluator, elseAction);
-        //}
+        public GeneralMatcherResultAfterElse<T, TMatcher, TResult> Else(DelegateFunc<T, TResult> elseFunc)
+        {
+            return GeneralMatcherResultAfterElse<T, TMatcher, TResult>.Create(ref _previous, _valueProvider, _evaluator, elseFunc);
+        }
 
-        //public ExecutableMatcherAfterElse<T, TMatcher> IgnoreElse()
-        //{
-        //    return ExecutableMatcherAfterElse<T, TMatcher>.Create(ref _previous, _valueProvider, _evaluator, EmptyAction);
-        //}
+        public GeneralMatcherResultAfterElse<T, TMatcher, TFuncParam, TResult> Else<TFuncParam>(DelegateFunc<T, TFuncParam, TResult> elseFunc, TFuncParam elseParam)
+        {
+            return GeneralMatcherResultAfterElse<T, TMatcher, TFuncParam, TResult>.Create(ref _previous, _valueProvider, _evaluator, elseFunc, elseParam);
+        }
 
-        //public void Exec()
-        //{
-        //    Option<bool> result;
-        //    T value;
-        //    do
-        //    {
-        //        result = _evaluator(ref _previous);
-        //        if (result.isSome && result.value)
-        //        {
-        //            return;
-        //        }
-        //    } while (result.isSome);
-        //    // We didn't find the match
-        //    _valueProvider(ref _previous, out value);
-        //    throw new NoMatchException("No match found for " + value);
-        //}
+        public GeneralMatcherResultAfterElse<T, TMatcher, TResult> Else(TResult elseResult)
+        {
+            return GeneralMatcherResultAfterElse<T, TMatcher, TResult>.Create(ref _previous, _valueProvider, _evaluator, elseResult);
+        }
+
+        public TResult Result()
+        {
+            TResult result;
+            if (_evaluator(ref _previous, out result))
+            {
+                return result;
+            }
+            T value;
+            _valueProvider(ref _previous, out value);
+            throw new NoMatchException("No match found for value " + value);
+        }
     }
 
-    //public struct ExecutableMatcherAfterElse<T, TMatcher>
-    //{
-    //    private Evaluator<TMatcher> _evaluator;
-    //    private ValueProvider<T, TMatcher> _valueProvider;
-    //    private TMatcher _previous;
-    //    private DelegateAction<T> _elseAction;
+    public struct GeneralMatcherResultAfterElse<T, TMatcher, TResult>
+    {
+        private Evaluator<TMatcher, TResult> _evaluator;
+        private ValueProvider<T, TMatcher> _valueProvider;
+        private TMatcher _previous;
+        private Either<DelegateFunc<T, TResult>, TResult> _elseFuncOrElseResult;
 
-    //    internal static ExecutableMatcherAfterElse<T, TMatcher> Create(ref TMatcher previous, ValueProvider<T, TMatcher> valueProvider,
-    //        Evaluator<TMatcher> evaluator, DelegateAction<T> elseAction)
-    //    {
-    //        return new ExecutableMatcherAfterElse<T, TMatcher>
-    //        {
-    //            _previous = previous,
-    //            _evaluator = evaluator,
-    //            _valueProvider = valueProvider,
-    //            _elseAction = elseAction
-    //        };
-    //    }
+        internal static GeneralMatcherResultAfterElse<T, TMatcher, TResult> Create(ref TMatcher previous,
+                                                                                   ValueProvider<T, TMatcher> valueProvider,
+                                                                                   Evaluator<TMatcher, TResult> evaluator,
+                                                                                   DelegateFunc<T, TResult> elseFunc)
+        {
+            return new GeneralMatcherResultAfterElse<T, TMatcher, TResult>
+            {
+                _previous = previous,
+                _valueProvider = valueProvider,
+                _evaluator = evaluator,
+                _elseFuncOrElseResult = Either<DelegateFunc<T, TResult>, TResult>.Left(elseFunc)
+            };
+        }
 
-    //    public void Exec()
-    //    {
-    //        Option<bool> result;
-    //        T value;
-    //        _valueProvider(ref _previous, out value);
-    //        do
-    //        {
-    //            result = _evaluator(ref _previous);
-    //            if (result.isSome && result.value)
-    //            {
-    //                return;
-    //            }
-    //        } while (result.isSome);
-    //        // We didn't find the match
-    //        _elseAction(value);
-    //    }
-    //}
+        internal static GeneralMatcherResultAfterElse<T, TMatcher, TResult> Create(ref TMatcher previous,
+                                                                                   ValueProvider<T, TMatcher> valueProvider,
+                                                                                   Evaluator<TMatcher, TResult> evaluator,
+                                                                                   TResult elseResult)
+        {
+            return new GeneralMatcherResultAfterElse<T, TMatcher, TResult>
+            {
+                _previous = previous,
+                _valueProvider = valueProvider,
+                _evaluator = evaluator,
+                _elseFuncOrElseResult = Either<DelegateFunc<T, TResult>, TResult>.Right(elseResult)
+            };
+        }
 
-    //public struct ExecutableMatcherAfterElse<T, TMatcher, TActionParam>
-    //{
-    //    private Evaluator<TMatcher> _evaluator;
-    //    private ValueProvider<T, TMatcher> _valueProvider;
-    //    private TMatcher _previous;
-    //    private DelegateAction<T, TActionParam> _elseAction;
-    //    private TActionParam _param;
+        private TResult GetResult(T value)
+        {
+            return _elseFuncOrElseResult.isLeft ? _elseFuncOrElseResult.leftValue(value) : _elseFuncOrElseResult.rightValue;
+        }
 
-    //    internal static ExecutableMatcherAfterElse<T, TMatcher, TActionParam> Create(ref TMatcher previous,
-    //                                                                                 ValueProvider<T, TMatcher> valueProvider,
-    //                                                                                 Evaluator<TMatcher> evaluator,
-    //                                                                                 DelegateAction<T, TActionParam> elseAction,
-    //                                                                                 TActionParam param)
-    //    {
-    //        return new ExecutableMatcherAfterElse<T, TMatcher, TActionParam>
-    //        {
-    //            _previous = previous,
-    //            _evaluator = evaluator,
-    //            _valueProvider = valueProvider,
-    //            _elseAction = elseAction,
-    //            _param = param
-    //        };
-    //    }
+        public TResult Result()
+        {
+            TResult result;
+            if (_evaluator(ref _previous, out result))
+            {
+                return result;
+            }
+            T value;
+            _valueProvider(ref _previous, out value);
+            return GetResult(value);
+        }
+    }
 
-    //    public void Exec()
-    //    {
-    //        Option<bool> result;
-    //        T value;
-    //        _valueProvider(ref _previous, out value);
-    //        do
-    //        {
-    //            result = _evaluator(ref _previous);
-    //            if (result.isSome && result.value)
-    //            {
-    //                return;
-    //            }
-    //        } while (result.isSome);
-    //        // We didn't find the match
-    //        _elseAction(value, _param);
-    //    }
-    //}
+    public struct GeneralMatcherResultAfterElse<T, TMatcher, TFuncParam, TResult>
+    {
+        private Evaluator<TMatcher, TResult> _evaluator;
+        private ValueProvider<T, TMatcher> _valueProvider;
+        private TMatcher _previous;
+        private DelegateFunc<T, TFuncParam, TResult> _elseFunc;
+        private TFuncParam _elseParam;
+
+        internal static GeneralMatcherResultAfterElse<T, TMatcher, TFuncParam, TResult> Create(ref TMatcher previous,
+                                                                                   ValueProvider<T, TMatcher> valueProvider,
+                                                                                   Evaluator<TMatcher, TResult> evaluator,
+                                                                                   DelegateFunc<T, TFuncParam, TResult> elseFunc,
+                                                                                   TFuncParam elseParam)
+        {
+            return new GeneralMatcherResultAfterElse<T, TMatcher, TFuncParam, TResult>
+            {
+                _previous = previous,
+                _valueProvider = valueProvider,
+                _evaluator = evaluator,
+                _elseFunc = elseFunc,
+                _elseParam = elseParam
+            };
+        }
+
+        public TResult Result()
+        {
+            TResult result;
+            if (_evaluator(ref _previous, out result))
+            {
+                return result;
+            }
+            T value;
+            _valueProvider(ref _previous, out value);
+            return _elseFunc(value, _elseParam);
+        }
+    }
 }

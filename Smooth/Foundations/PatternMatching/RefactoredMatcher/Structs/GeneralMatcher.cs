@@ -7,12 +7,15 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
 {
     internal struct BasicContainer<T>
     {
+        internal static BasicContainer<T> Create(T value)
+        {
+            return new BasicContainer<T> {_value = value};
+        }
         internal static ValueProvider<T, BasicContainer<T>> Provider = (ref BasicContainer<T> matcher, out T value) => value = matcher._value;
         internal static Evaluator<BasicContainer<T>> Evaluator = (ref BasicContainer<T> previous) => false; 
         private T _value;
     }
 
-    #region Action
     public struct GeneralMatcher<T, TMatcher>
     {
         private static readonly DelegateAction<T> EmptyAction = _ => { }; 
@@ -50,6 +53,13 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
         {
             return GeneralMatcherAfterElse<T, TMatcher>.Create(ref _previous, _valueProvider, _evaluator, elseAction);
         }
+
+        public GeneralMatcherAfterElse<T, TMatcher, TActionParam> Else<TActionParam>(
+            DelegateAction<T, TActionParam> elseAction, TActionParam param)
+        {
+            return GeneralMatcherAfterElse<T, TMatcher, TActionParam>.Create(ref _previous, _valueProvider, _evaluator,
+                elseAction, param);
+        } 
 
         public GeneralMatcherAfterElse<T, TMatcher> IgnoreElse()
         {
@@ -125,6 +135,4 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
             _elseAction(value, _param);
         }
     }
-    #endregion
-
 }
