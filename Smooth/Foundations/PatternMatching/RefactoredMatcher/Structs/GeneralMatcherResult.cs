@@ -54,19 +54,19 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
             return WithMatcherResult<T, TMatcher, TResult>.Create(ref _previous, _valueProvider, _evaluator, value);
         }
 
-        public GeneralMatcherResultAfterElse<T, TMatcher, TResult> Else(DelegateFunc<T, TResult> elseFunc)
+        public GeneralMatcherAfterElseResult<T, TMatcher, TResult> Else(DelegateFunc<T, TResult> elseFunc)
         {
-            return GeneralMatcherResultAfterElse<T, TMatcher, TResult>.Create(ref _previous, _valueProvider, _evaluator, elseFunc);
+            return GeneralMatcherAfterElseResult<T, TMatcher, TResult>.Create(ref _previous, _valueProvider, _evaluator, elseFunc);
         }
 
-        public GeneralMatcherResultAfterElse<T, TMatcher, TFuncParam, TResult> Else<TFuncParam>(DelegateFunc<T, TFuncParam, TResult> elseFunc, TFuncParam elseParam)
+        public GeneralMatcherAfterElseResult<T, TMatcher, TFuncParam, TResult> Else<TFuncParam>(DelegateFunc<T, TFuncParam, TResult> elseFunc, TFuncParam elseParam)
         {
-            return GeneralMatcherResultAfterElse<T, TMatcher, TFuncParam, TResult>.Create(ref _previous, _valueProvider, _evaluator, elseFunc, elseParam);
+            return GeneralMatcherAfterElseResult<T, TMatcher, TFuncParam, TResult>.Create(ref _previous, _valueProvider, _evaluator, elseFunc, elseParam);
         }
 
-        public GeneralMatcherResultAfterElse<T, TMatcher, TResult> Else(TResult elseResult)
+        public GeneralMatcherAfterElseResult<T, TMatcher, TResult> Else(TResult elseResult)
         {
-            return GeneralMatcherResultAfterElse<T, TMatcher, TResult>.Create(ref _previous, _valueProvider, _evaluator, elseResult);
+            return GeneralMatcherAfterElseResult<T, TMatcher, TResult>.Create(ref _previous, _valueProvider, _evaluator, elseResult);
         }
 
         public TResult Result()
@@ -82,19 +82,19 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
         }
     }
 
-    public struct GeneralMatcherResultAfterElse<T, TMatcher, TResult>
+    public struct GeneralMatcherAfterElseResult<T, TMatcher, TResult>
     {
         private Evaluator<TMatcher, TResult> _evaluator;
         private ValueProvider<T, TMatcher> _valueProvider;
         private TMatcher _previous;
         private Either<DelegateFunc<T, TResult>, TResult> _elseFuncOrElseResult;
 
-        internal static GeneralMatcherResultAfterElse<T, TMatcher, TResult> Create(ref TMatcher previous,
+        internal static GeneralMatcherAfterElseResult<T, TMatcher, TResult> Create(ref TMatcher previous,
                                                                                    ValueProvider<T, TMatcher> valueProvider,
                                                                                    Evaluator<TMatcher, TResult> evaluator,
                                                                                    DelegateFunc<T, TResult> elseFunc)
         {
-            return new GeneralMatcherResultAfterElse<T, TMatcher, TResult>
+            return new GeneralMatcherAfterElseResult<T, TMatcher, TResult>
             {
                 _previous = previous,
                 _valueProvider = valueProvider,
@@ -103,12 +103,12 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
             };
         }
 
-        internal static GeneralMatcherResultAfterElse<T, TMatcher, TResult> Create(ref TMatcher previous,
+        internal static GeneralMatcherAfterElseResult<T, TMatcher, TResult> Create(ref TMatcher previous,
                                                                                    ValueProvider<T, TMatcher> valueProvider,
                                                                                    Evaluator<TMatcher, TResult> evaluator,
                                                                                    TResult elseResult)
         {
-            return new GeneralMatcherResultAfterElse<T, TMatcher, TResult>
+            return new GeneralMatcherAfterElseResult<T, TMatcher, TResult>
             {
                 _previous = previous,
                 _valueProvider = valueProvider,
@@ -135,7 +135,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
         }
     }
 
-    public struct GeneralMatcherResultAfterElse<T, TMatcher, TFuncParam, TResult>
+    public struct GeneralMatcherAfterElseResult<T, TMatcher, TFuncParam, TResult>
     {
         private Evaluator<TMatcher, TResult> _evaluator;
         private ValueProvider<T, TMatcher> _valueProvider;
@@ -143,13 +143,13 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
         private DelegateFunc<T, TFuncParam, TResult> _elseFunc;
         private TFuncParam _elseParam;
 
-        internal static GeneralMatcherResultAfterElse<T, TMatcher, TFuncParam, TResult> Create(ref TMatcher previous,
+        internal static GeneralMatcherAfterElseResult<T, TMatcher, TFuncParam, TResult> Create(ref TMatcher previous,
                                                                                    ValueProvider<T, TMatcher> valueProvider,
                                                                                    Evaluator<TMatcher, TResult> evaluator,
                                                                                    DelegateFunc<T, TFuncParam, TResult> elseFunc,
                                                                                    TFuncParam elseParam)
         {
-            return new GeneralMatcherResultAfterElse<T, TMatcher, TFuncParam, TResult>
+            return new GeneralMatcherAfterElseResult<T, TMatcher, TFuncParam, TResult>
             {
                 _previous = previous,
                 _valueProvider = valueProvider,
