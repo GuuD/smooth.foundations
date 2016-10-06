@@ -1,4 +1,6 @@
-﻿namespace Smooth.Foundations.PatternMatching.GeneralMatcher
+﻿using Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs;
+
+namespace Smooth.Foundations.PatternMatching.GeneralMatcher
 {
     /// <summary>
     /// Defines a extension method for supplying Match() to general types. Due to the way extension methods are resolved
@@ -7,8 +9,14 @@
     /// </summary>
     public static class GeneralMatcherExtensions
     {
-        public static ExecMatcher<T> Match<T>(this T item) => new ExecMatcher<T>(item);
+        public static BasicContainer<T> Match<T>(this T item)
+        {
+            return BasicContainer<T>.Create(item);
+        }
 
-        public static ResultMatcher<T, TResult> MatchTo<T, TResult>(this T item) => new ResultMatcher<T, TResult>(item); 
+        public static BasicContainerResult<T, TResult> MatchTo<T, TResult>(this T item)
+        {
+            return BasicContainerResult<T,TResult>.Create(item);
+        }
     }
 }

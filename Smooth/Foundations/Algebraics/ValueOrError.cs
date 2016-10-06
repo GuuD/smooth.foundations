@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using Smooth.Delegates;
-using Smooth.Foundations.PatternMatching.ValueOrError;
-using Smooth.Foundations.PatternMatching.ValueOrError.Function;
 
 namespace Smooth.Foundations.Algebraics
 {
@@ -42,6 +39,11 @@ namespace Smooth.Foundations.Algebraics
         public static ValueOrError<T> FromError(string error)
         {
             return new ValueOrError<T>(default(T), error, true);
+        }
+
+        public static ValueOrError<T> FromException(Exception e)
+        {
+            return new ValueOrError<T>(default(T), e.Message + "\n" + e.StackTrace, true);
         }
 
         private ValueOrError(T value, string error, bool isError)
@@ -156,6 +158,13 @@ namespace Smooth.Foundations.Algebraics
         public static bool operator !=(ValueOrError<T> lhs, ValueOrError<T> rhs)
         {
             return !(lhs == rhs);
+        }
+
+        public override string ToString()
+        {
+            return IsError
+                ? "Error: " + Error
+                : "Value: " + Value;
         }
     }
 }

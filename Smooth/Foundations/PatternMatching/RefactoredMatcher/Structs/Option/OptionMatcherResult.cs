@@ -1,18 +1,46 @@
 ﻿using Smooth.Algebraics;
 using Smooth.Delegates;
+using Smooth.Foundations.Algebraics;
 using Smooth.PatternMatching.MatcherDelegates;
 
 namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
 {
+    public struct BasicOptionContainerResult<T, TResult>
+    {
+        internal static BasicOptionContainerResult<T, TResult> Create(Option<T> value)
+        {
+            return new BasicOptionContainerResult<T, TResult> { _value = value };
+        }
+        private static readonly ValueProvider<T, BasicOptionContainerResult<T, TResult>> Provider = 
+            (ref BasicOptionContainerResult<T, TResult> matcher, out T value) => value = matcher._value.value;
+        private static readonly Evaluator<BasicOptionContainerResult<T, TResult>, TResult> Evaluator = 
+            (ref BasicOptionContainerResult<T, TResult> previous, out TResult result) =>
+        {
+            result = default(TResult);
+            return false;
+        };
+        private Option<T> _value;
+
+        public SomeMatcherResult<T, BasicOptionContainerResult<T, TResult>, TResult> Some()
+        {
+            return SomeMatcherResult<T, BasicOptionContainerResult<T, TResult>, TResult>.Create(ref this, Provider, Evaluator, _value.isSome);
+        }
+
+        public NoneMatcherResult<T, BasicOptionContainerResult<T, TResult>, TResult> None()
+        {
+            return NoneMatcherResult<T, BasicOptionContainerResult<T, TResult>, TResult>.Create(ref this, Provider, Evaluator, _value.isSome);
+        }
+    }
+
     public struct OptionMatcherResult<T, TMatcher, TResult>
     {
         private TMatcher _previous;
         private ValueProvider<T, TMatcher> _valueProvider;
-        private Evaluator<TMatcher> _evaluator;
+        private Evaluator<TMatcher, TResult> _evaluator;
         private bool _isSome;
 
         internal static OptionMatcherResult<T, TMatcher, TResult> Create(ref TMatcher previousMatcher,
-            ValueProvider<T, TMatcher> valueProvider, Evaluator<TMatcher> evaluator, bool isSome)
+            ValueProvider<T, TMatcher> valueProvider, Evaluator<TMatcher, TResult> evaluator, bool isSome)
         {
             return new OptionMatcherResult<T, TMatcher, TResult>
             {
@@ -23,9 +51,9 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             };
         }
 
-        public SomeMatcherResult<T, TMatcher, TMatcherResult> Some()
+        public SomeMatcherResult<T, TMatcher, TResult> Some()
         {
-            return SomeMatcherResult<T, TMatcher, TMatcherResult>.Create(ref _previous, _valueProvider, _evaluator, _isSome);
+            return SomeMatcherResult<T, TMatcher, TResult>.Create(ref _previous, _valueProvider, _evaluator, _isSome);
         }
 
         public NoneMatcherResult<T, TMatcher, TResult> None()
@@ -33,16 +61,20 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             return NoneMatcherResult<T, TMatcher, TResult>.Create(ref _previous, _valueProvider, _evaluator, _isSome);
         }
 
-        public OptionMatcherResult<T, NoneMatcherResult<T, TMatcher, TResult>, TResult> None(DelegateAction action)
+        public OptionMatcherResult<T, NoneMatcherResult<T, TMatcher, TResult>, TResult> None(DelegateFunc<TResult> func)
         {
             var proxy = NoneMatcherResult<T, TMatcher, TResult>.Create(ref _previous, _valueProvider, _evaluator, _isSome);
-            var vp = NoneMatcherResult<T, TMatcher, TResult>.NoneProvider;
-            var e = NoneMatcherResult<T, TMatcher, TResult>.NoneEvaluator;
-            return OptionMatcherResult<T, NoneMatcherResult<T, TMatcher, TResult>, TResult>.Create(ref proxy, vp, e, _isSome);
+            return proxy.Return(func);
+        }
+
+        public OptionMatcherResult<T, NoneMatcherResult<T, TMatcher, TResult>, TResult> None(TResult value)
+        {
+            var proxy = NoneMatcherResult<T, TMatcher, TResult>.Create(ref _previous, _valueProvider, _evaluator, _isSome);
+            return proxy.Return(value);
         }
 
         public OptionMatcherResult<T, NoneMatcherResult<T, TMatcher, TFuncParam, TResult>, TResult> None<TFuncParam>(
-            DelegateAction<TFuncParam> action, TFuncParam param)
+            DelegateFunc<TFuncParam, TResult> action, TFuncParam param)
         {
             var proxy = _isSome
                 ? NoneMatcherResult<T, TMatcher, TFuncParam, TResult>.CreateSkip(ref _previous, _valueProvider, _evaluator)
@@ -52,38 +84,40 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             return OptionMatcherResult<T, NoneMatcherResult<T, TMatcher, TFuncParam, TResult>, TResult>.Create(ref proxy, vp, e, _isSome);
         }
 
-        public OptionMatcherAfterElseResult<T, TMatcher, TResult> Else(DelegateAction action)
+        public OptionMatcherAfterElseResult<T, TMatcher, TResult> Else(DelegateFunc<TResult> elseFunc)
         {
-            return OptionMatcherAfterElseResult<T, TMatcher, TResult>.Create(ref _previous, _valueProvider, _evaluator, action, _isSome);
+            return OptionMatcherAfterElseResult<T, TMatcher, TResult>.Create(ref _previous, _valueProvider, _evaluator, elseFunc, _isSome);
         }
 
-        public OptionMatcherAfterElseResult<T, TMatcher, TResult> Else(DelegateAction<Option<T>> action)
+        public OptionMatcherAfterElseResult<T, TMatcher, TResult> Else(DelegateFunc<Option<T>, TResult> elseFunc)
         {
-            return OptionMatcherAfterElseResult<T, TMatcher, TResult>.Create(ref _previous, _valueProvider, _evaluator, action, _isSome);
+            return OptionMatcherAfterElseResult<T, TMatcher, TResult>.Create(ref _previous, _valueProvider, _evaluator, elseFunc, _isSome);
         }
 
-        public OptionMatcherAfterElseResult<T, TMatcher, TFuncParam, TResult> Else<TFuncParam>(DelegateAction<TFuncParam> action,
+        public OptionMatcherAfterElseResult<T, TMatcher, TResult> Else(TResult elseResult)
+        {
+            return OptionMatcherAfterElseResult<T, TMatcher, TResult>.Create(ref _previous, _valueProvider, _evaluator, elseResult, _isSome);
+        }
+
+        public OptionMatcherAfterElseResult<T, TMatcher, TFuncParam, TResult> Else<TFuncParam>(DelegateFunc<TFuncParam, TResult> func,
             TFuncParam param)
         {
             return OptionMatcherAfterElseResult<T, TMatcher, TFuncParam, TResult>.Create(ref _previous, _valueProvider, _evaluator,
-                action, param, _isSome);
+                func, param, _isSome);
         }
 
-        public OptionMatcherAfterElseResult<T, TMatcher, TFuncParam, TResult> Else<TFuncParam>(DelegateAction<Option<T>, TFuncParam> action,
+        public OptionMatcherAfterElseResult<T, TMatcher, TFuncParam, TResult> Else<TFuncParam>(DelegateFunc<Option<T>, TFuncParam, TResult> func,
             TFuncParam param)
         {
             return OptionMatcherAfterElseResult<T, TMatcher, TFuncParam, TResult>.Create(ref _previous, _valueProvider, _evaluator,
-                action, param, _isSome);
+                func, param, _isSome);
         }
 
-        public OptionMatcherAfterElseResult<T, TMatcher, TResult> IgnoreElse()
+        public TResult Result()
         {
-            return OptionMatcherAfterElseResult<T, TMatcher, TResult>.Create(ref _previous, _valueProvider, _evaluator, () => { }, _isSome);
-        }
-
-        public void Exec()
-        {
-            if (_evaluator(ref _previous)) return;
+            TResult result;
+            if (_evaluator(ref _previous, out result))
+                return result;
             Option<T> op;
             if (_isSome)
             {
@@ -103,15 +137,15 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
     {
         private TMatcher _previous;
         private ValueProvider<T, TMatcher> _valueProvider;
-        private Evaluator<TMatcher> _evaluator;
-        private Either<DelegateAction<Option<T>>, DelegateAction> _action;
+        private Evaluator<TMatcher, TResult> _evaluator;
+        private Union<DelegateFunc<Option<T>, TResult>, DelegateFunc<TResult>, TResult> _elseResult;
         private bool _isSome;
 
 
         internal static OptionMatcherAfterElseResult<T, TMatcher, TResult> Create(ref TMatcher previousMatcher,
                                                                    ValueProvider<T, TMatcher> valueProvider,
-                                                                   Evaluator<TMatcher> evaluator,
-                                                                   DelegateAction action,
+                                                                   Evaluator<TMatcher, TResult> evaluator,
+                                                                   TResult result,
                                                                    bool isSome)
         {
             return new OptionMatcherAfterElseResult<T, TMatcher, TResult>
@@ -119,15 +153,15 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
                 _previous = previousMatcher,
                 _valueProvider = valueProvider,
                 _evaluator = evaluator,
-                _action = Either<DelegateAction<Option<T>>, DelegateAction>.Right(action),
+                _elseResult = Union<DelegateFunc<Option<T>, TResult>, DelegateFunc<TResult>, TResult>.CreateThird(result),
                 _isSome = isSome
             };
         }
 
         internal static OptionMatcherAfterElseResult<T, TMatcher, TResult> Create(ref TMatcher previousMatcher,
                                                                    ValueProvider<T, TMatcher> valueProvider,
-                                                                   Evaluator<TMatcher> evaluator,
-                                                                   DelegateAction<Option<T>> action,
+                                                                   Evaluator<TMatcher, TResult> evaluator,
+                                                                   DelegateFunc<TResult> func,
                                                                    bool isSome)
         {
             return new OptionMatcherAfterElseResult<T, TMatcher, TResult>
@@ -135,21 +169,33 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
                 _previous = previousMatcher,
                 _valueProvider = valueProvider,
                 _evaluator = evaluator,
-                _action = Either<DelegateAction<Option<T>>, DelegateAction>.Left(action),
+                _elseResult = Union<DelegateFunc<Option<T>, TResult>, DelegateFunc<TResult>, TResult>.CreateSecond(func),
                 _isSome = isSome
             };
         }
 
-
-        public void Exec()
+        internal static OptionMatcherAfterElseResult<T, TMatcher, TResult> Create(ref TMatcher previousMatcher,
+                                                                   ValueProvider<T, TMatcher> valueProvider,
+                                                                   Evaluator<TMatcher, TResult> evaluator,
+                                                                   DelegateFunc<Option<T>, TResult> func,
+                                                                   bool isSome)
         {
-            if (_evaluator(ref _previous))
-                return;
-            if (_action.isRight)
+            return new OptionMatcherAfterElseResult<T, TMatcher, TResult>
             {
-                _action.rightValue();
-                return;
-            }
+                _previous = previousMatcher,
+                _valueProvider = valueProvider,
+                _evaluator = evaluator,
+                _elseResult = Union<DelegateFunc<Option<T>, TResult>, DelegateFunc<TResult>, TResult>.CreateFirst(func),
+                _isSome = isSome
+            };
+        }
+
+        public TResult Result()
+        {
+            TResult result;
+            if (_evaluator(ref _previous, out result))
+                return result;
+
             Option<T> op;
             if (_isSome)
             {
@@ -161,7 +207,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             {
                 op = Option<T>.None;
             }
-            _action.leftValue(op);
+            return _elseResult.Cata((f, o) => f(o), op, func => func(), r => r);
         }
     }
 
@@ -169,16 +215,16 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
     {
         private TMatcher _previous;
         private ValueProvider<T, TMatcher> _valueProvider;
-        private Evaluator<TMatcher> _evaluator;
-        private Either<DelegateAction<Option<T>, TFuncParam>, DelegateAction<TFuncParam>> _action;
+        private Evaluator<TMatcher, TResult> _evaluator;
+        private Either<DelegateFunc<Option<T>, TFuncParam, TResult>, DelegateFunc<TFuncParam, TResult>> _elseFunc;
         private TFuncParam _param;
         private bool _isSome;
 
 
         internal static OptionMatcherAfterElseResult<T, TMatcher, TFuncParam, TResult> Create(ref TMatcher previousMatcher,
                                                                    ValueProvider<T, TMatcher> valueProvider,
-                                                                   Evaluator<TMatcher> evaluator,
-                                                                   DelegateAction<TFuncParam> action,
+                                                                   Evaluator<TMatcher, TResult> evaluator,
+                                                                   DelegateFunc<TFuncParam, TResult> elseFunc,
                                                                    TFuncParam param,
                                                                    bool isSome)
         {
@@ -187,7 +233,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
                 _previous = previousMatcher,
                 _valueProvider = valueProvider,
                 _evaluator = evaluator,
-                _action = Either<DelegateAction<Option<T>, TFuncParam>, DelegateAction<TFuncParam>>.Right(action),
+                _elseFunc = Either<DelegateFunc<Option<T>, TFuncParam, TResult>, DelegateFunc<TFuncParam, TResult>>.Right(elseFunc),
                 _param = param,
                 _isSome = isSome
             };
@@ -195,8 +241,8 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
 
         internal static OptionMatcherAfterElseResult<T, TMatcher, TFuncParam, TResult> Create(ref TMatcher previousMatcher,
                                                                    ValueProvider<T, TMatcher> valueProvider,
-                                                                   Evaluator<TMatcher> evaluator,
-                                                                   DelegateAction<Option<T>, TFuncParam> action,
+                                                                   Evaluator<TMatcher, TResult> evaluator,
+                                                                   DelegateFunc<Option<T>, TFuncParam, TResult> elseFunc,
                                                                    TFuncParam param,
                                                                    bool isSome)
         {
@@ -205,22 +251,19 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
                 _previous = previousMatcher,
                 _valueProvider = valueProvider,
                 _evaluator = evaluator,
-                _action = Either<DelegateAction<Option<T>, TFuncParam>, DelegateAction<TFuncParam>>.Left(action),
+                _elseFunc = Either<DelegateFunc<Option<T>, TFuncParam, TResult>, DelegateFunc<TFuncParam, TResult>>.Left(elseFunc),
                 _param = param,
                 _isSome = isSome
             };
         }
 
 
-        public void Exec()
+        public TResult Result()
         {
-            if (_evaluator(ref _previous))
-                return;
-            if (_action.isRight)
-            {
-                _action.rightValue(_param);
-                return;
-            }
+            TResult result;
+            if (_evaluator(ref _previous, out result))
+                return result;
+
             Option<T> op;
             if (_isSome)
             {
@@ -232,7 +275,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             {
                 op = Option<T>.None;
             }
-            _action.leftValue(op, _param);
+            return _elseFunc.Cata((f, p) => f.Call(p), Tuple.Create(op, _param), (func, p) => func(p), _param);
         }
     }
 }

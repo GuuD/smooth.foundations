@@ -18,7 +18,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
         {
             var matcher = new WithMatcher<T, TMatcher>
             {
-                _values = ListPool<T>.Instance.BorrowConditional(l => l.Capacity >= 4, () => new List<T>(6)),
+                _values = ListPool<T>.Instance.Borrow(),
                 _valueProvider = valueProvider,
                 _evaluator = evaluator,
                 _previous = previousMatcher

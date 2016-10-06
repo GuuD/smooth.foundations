@@ -4,23 +4,36 @@ using Smooth.PatternMatching.MatcherDelegates;
 
 namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
 {
-
-    internal struct BasicOptionContainer<T>
+    public struct BasicOptionContainer<T>
     {
         internal static BasicOptionContainer<T> Create(Option<T> value)
         {
             return new BasicOptionContainer<T> { _value = value };
         }
-        internal static ValueProvider<T, BasicOptionContainer<T>> Provider = (ref BasicOptionContainer<T> matcher, out T value) => value = matcher._value.value;
-        internal static Evaluator<BasicContainer<T>> Evaluator = (ref BasicContainer<T> previous) => false;
+        private static readonly ValueProvider<T, BasicOptionContainer<T>> Provider = (ref BasicOptionContainer<T> matcher, out T value) => value = matcher._value.value;
+        private static readonly Evaluator<BasicOptionContainer<T>> Evaluator = (ref BasicOptionContainer<T> previous) => false;
         private Option<T> _value;
+        public SomeMatcher<T, BasicOptionContainer<T>> Some()
+        {
+            return SomeMatcher<T, BasicOptionContainer<T>>.Create(ref this, Provider, Evaluator, _value.isSome);
+        }
+
+        public NoneMatcher<T, BasicOptionContainer<T>> None()
+        {
+            return NoneMatcher<T, BasicOptionContainer<T>>.Create(ref this, Provider, Evaluator, _value.isSome);
+        }
+
+        public BasicOptionContainerResult<T, TResult> To<TResult>()
+        {
+            return BasicOptionContainerResult<T, TResult>.Create(_value);
+        } 
     }
 
     public struct OptionMatcher<T, TMatcher>
     {
         private TMatcher _previous;
         private ValueProvider<T, TMatcher> _valueProvider;
-        private Evaluator<TMatcher> _evaluator; 
+        private Evaluator<TMatcher> _evaluator;
         private bool _isSome;
 
         internal static OptionMatcher<T, TMatcher> Create(ref TMatcher previousMatcher,
@@ -48,9 +61,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
         public OptionMatcher<T, NoneMatcher<T, TMatcher>> None(DelegateAction action)
         {
             var proxy = NoneMatcher<T, TMatcher>.Create(ref _previous, _valueProvider, _evaluator, _isSome);
-            var vp = NoneMatcher<T, TMatcher>.NoneProvider;
-            var e = NoneMatcher<T, TMatcher>.NoneEvaluator;
-            return OptionMatcher<T, NoneMatcher<T, TMatcher>>.Create(ref proxy, vp, e, _isSome);
+            return proxy.Do(action);
         }
 
         public OptionMatcher<T, NoneMatcher<T, TMatcher, TActionParam>> None<TActionParam>(

@@ -1,16 +1,17 @@
 ﻿using Smooth.Delegates;
+using Smooth.Foundations.Algebraics;
 using Smooth.PatternMatching.MatcherDelegates;
 
-namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
+namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.ValueOrError
 {
-    public struct WhereOptionMatcher<T, TMatcher>
+    public struct WhereValueMatcher<T, TMatcher>
     {
 
-        internal static WhereOptionMatcher<T, TMatcher> CreateSkip(ref TMatcher previousMatcher,
-                                                           ValueProvider<T, TMatcher> valueProvider,
+        internal static WhereValueMatcher<T, TMatcher> CreateSkip(ref TMatcher previousMatcher,
+                                                           ValueProvider<ValueOrError<T>, TMatcher> valueProvider,
                                                            Evaluator<TMatcher> evaluator)
         {
-            return new WhereOptionMatcher<T, TMatcher>
+            return new WhereValueMatcher<T, TMatcher>
             {
                 _previous = previousMatcher,
                 _valueProvider = valueProvider,
@@ -19,11 +20,11 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             };
         }
 
-        internal static WhereOptionMatcher<T, TMatcher> Create(ref TMatcher previousMatcher,
-                                                           ValueProvider<T, TMatcher> valueProvider,
+        internal static WhereValueMatcher<T, TMatcher> Create(ref TMatcher previousMatcher,
+                                                           ValueProvider<ValueOrError<T>, TMatcher> valueProvider,
                                                            Evaluator<TMatcher> evaluator, Predicate<T> predicate)
         {
-            return new WhereOptionMatcher<T, TMatcher>
+            return new WhereValueMatcher<T, TMatcher>
             {
                 _predicate = predicate,
                 _valueProvider = valueProvider,
@@ -32,39 +33,39 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             };
         }
 
-        private static readonly ValueProvider<T, WhereOptionMatcher<T, TMatcher>> WhereValueProvider = GetValue;
-        private static readonly Evaluator<WhereOptionMatcher<T, TMatcher>> WhereEvaluator = Evaluate;
+        private static readonly ValueProvider<ValueOrError<T>, WhereValueMatcher<T, TMatcher>> WhereValueProvider = GetValue;
+        private static readonly Evaluator<WhereValueMatcher<T, TMatcher>> WhereEvaluator = Evaluate;
 
 
         private Evaluator<TMatcher> _evaluator;
-        private ValueProvider<T, TMatcher> _valueProvider;
+        private ValueProvider<ValueOrError<T>, TMatcher> _valueProvider;
         private TMatcher _previous;
         private Predicate<T> _predicate;
         private DelegateAction<T> _action;
         private bool _skip;
 
-        public OptionMatcher<T, WhereOptionMatcher<T, TMatcher>> Do(DelegateAction<T> action)
+        public VoEMatcher<T, WhereValueMatcher<T, TMatcher>> Do(DelegateAction<T> action)
         {
             if (!_skip)
             {
                 _action = action;
             }
-            return OptionMatcher<T, WhereOptionMatcher<T, TMatcher>>.Create(ref this, WhereValueProvider, WhereEvaluator, !_skip);
+            return VoEMatcher<T, WhereValueMatcher<T, TMatcher>>.Create(ref this, WhereValueProvider, WhereEvaluator, !_skip);
         }
 
-        public OptionMatcher<T, WhereOptionMatcherParam<T, TMatcher, TActionParam>> Do<TActionParam>(DelegateAction<T, TActionParam> action,
+        public VoEMatcher<T, WhereValueMatcherParam<T, TMatcher, TActionParam>> Do<TActionParam>(DelegateAction<T, TActionParam> action,
                                                                                                    TActionParam param)
         {
             var proxy = _skip 
-                ? WhereOptionMatcherParam<T, TMatcher, TActionParam>.CreateSkip(ref _previous, _valueProvider, _evaluator)
-                : WhereOptionMatcherParam<T, TMatcher, TActionParam>.Create(ref _previous, _valueProvider, _evaluator,
+                ? WhereValueMatcherParam<T, TMatcher, TActionParam>.CreateSkip(ref _previous, _valueProvider, _evaluator)
+                : WhereValueMatcherParam<T, TMatcher, TActionParam>.Create(ref _previous, _valueProvider, _evaluator,
                 _predicate, action, param);
-            var vp = WhereOptionMatcherParam<T, TMatcher, TActionParam>.WhereValueProvider;
-            var e = WhereOptionMatcherParam<T, TMatcher, TActionParam>.WhereEvaluator;
-            return OptionMatcher<T, WhereOptionMatcherParam<T, TMatcher, TActionParam>>.Create(ref proxy, vp, e, !_skip);
+            var vp = WhereValueMatcherParam<T, TMatcher, TActionParam>.WhereValueProvider;
+            var e = WhereValueMatcherParam<T, TMatcher, TActionParam>.WhereEvaluator;
+            return VoEMatcher<T, WhereValueMatcherParam<T, TMatcher, TActionParam>>.Create(ref proxy, vp, e, !_skip);
         }
 
-        private static bool Evaluate(ref WhereOptionMatcher<T, TMatcher> matcher)
+        private static bool Evaluate(ref WhereValueMatcher<T, TMatcher> matcher)
         {
             var m = matcher._previous;
             var intermediateResult = matcher._evaluator(ref m);
@@ -76,8 +77,9 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             {
                 return false;
             }
-            T value;
-            matcher._valueProvider(ref m, out value);
+            ValueOrError<T> voe;
+            matcher._valueProvider(ref m, out voe);
+            var value = voe.Value;
             var result = matcher._predicate(value);
             if (result)
             {
@@ -85,21 +87,21 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             }
             return result;
         }
-        private static void GetValue(ref WhereOptionMatcher<T, TMatcher> matcher, out T value)
+        private static void GetValue(ref WhereValueMatcher<T, TMatcher> matcher, out ValueOrError<T> value)
         {
             matcher._valueProvider(ref matcher._previous, out value);
         }
     }
 
     #region General With Action Parameter
-    public struct WhereOptionMatcherParam<T, TMatcher, TActionParam>
+    public struct WhereValueMatcherParam<T, TMatcher, TActionParam>
     {
 
-        internal static WhereOptionMatcherParam<T, TMatcher, TActionParam> CreateSkip(ref TMatcher previousMatcher,
-                                                           ValueProvider<T, TMatcher> valueProvider,
+        internal static WhereValueMatcherParam<T, TMatcher, TActionParam> CreateSkip(ref TMatcher previousMatcher,
+                                                           ValueProvider<ValueOrError<T>, TMatcher> valueProvider,
                                                            Evaluator<TMatcher> evaluator)
         {
-            return new WhereOptionMatcherParam<T, TMatcher, TActionParam>
+            return new WhereValueMatcherParam<T, TMatcher, TActionParam>
             {
                 _valueProvider = valueProvider,
                 _evaluator = evaluator,
@@ -109,14 +111,14 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
         }
 
 
-        internal static WhereOptionMatcherParam<T, TMatcher, TActionParam> Create(ref TMatcher previousMatcher,
-                                                           ValueProvider<T, TMatcher> valueProvider,
+        internal static WhereValueMatcherParam<T, TMatcher, TActionParam> Create(ref TMatcher previousMatcher,
+                                                           ValueProvider<ValueOrError<T>, TMatcher> valueProvider,
                                                            Evaluator<TMatcher> evaluator,
                                                            Predicate<T> predicate,
                                                            DelegateAction<T, TActionParam> action,
                                                            TActionParam param)
         {
-            return new WhereOptionMatcherParam<T, TMatcher, TActionParam>
+            return new WhereValueMatcherParam<T, TMatcher, TActionParam>
             {
                 _predicate = predicate,
                 _valueProvider = valueProvider,
@@ -127,12 +129,12 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             };
         }
 
-        internal static readonly ValueProvider<T, WhereOptionMatcherParam<T, TMatcher, TActionParam>> WhereValueProvider = GetValue;
-        internal static readonly Evaluator<WhereOptionMatcherParam<T, TMatcher, TActionParam>> WhereEvaluator = Evaluate;
+        internal static readonly ValueProvider<ValueOrError<T>, WhereValueMatcherParam<T, TMatcher, TActionParam>> WhereValueProvider = GetValue;
+        internal static readonly Evaluator<WhereValueMatcherParam<T, TMatcher, TActionParam>> WhereEvaluator = Evaluate;
 
 
         private Evaluator<TMatcher> _evaluator;
-        private ValueProvider<T, TMatcher> _valueProvider;
+        private ValueProvider<ValueOrError<T>, TMatcher> _valueProvider;
         private TMatcher _previous;
         private Predicate<T> _predicate;
         private DelegateAction<T, TActionParam> _action;
@@ -140,7 +142,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
         private bool _skip;
 
 
-        private static bool Evaluate(ref WhereOptionMatcherParam<T, TMatcher, TActionParam> matcher)
+        private static bool Evaluate(ref WhereValueMatcherParam<T, TMatcher, TActionParam> matcher)
         {
             var m = matcher._previous;
             var intermediateResult = matcher._evaluator(ref m);
@@ -152,8 +154,9 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             {
                 return false;
             }
-            T value;
-            matcher._valueProvider(ref m, out value);
+            ValueOrError<T> voe;
+            matcher._valueProvider(ref m, out voe);
+            var value = voe.Value;
             var result = matcher._predicate(value);
             if (result)
             {
@@ -161,7 +164,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             }
             return result;
         }
-        private static void GetValue(ref WhereOptionMatcherParam<T, TMatcher, TActionParam> matcher, out T value)
+        private static void GetValue(ref WhereValueMatcherParam<T, TMatcher, TActionParam> matcher, out ValueOrError<T> value)
         {
             matcher._valueProvider(ref matcher._previous, out value);
         }
@@ -169,15 +172,15 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
     #endregion
 
     #region General With Predicate Parameter
-    public struct WhereOptionMatcher<T, TMatcher, TPredicateParam>
+    public struct WhereValueMatcher<T, TMatcher, TPredicateParam>
     {
 
 
-        internal static WhereOptionMatcher<T, TMatcher, TPredicateParam> CreateSkip(ref TMatcher previousMatcher,
-                                                           ValueProvider<T, TMatcher> valueProvider,
+        internal static WhereValueMatcher<T, TMatcher, TPredicateParam> CreateSkip(ref TMatcher previousMatcher,
+                                                           ValueProvider<ValueOrError<T>, TMatcher> valueProvider,
                                                            Evaluator<TMatcher> evaluator)
         {
-            return new WhereOptionMatcher<T, TMatcher, TPredicateParam>
+            return new WhereValueMatcher<T, TMatcher, TPredicateParam>
             {
                 _previous = previousMatcher,
                 _valueProvider = valueProvider,
@@ -186,11 +189,11 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             };
         }
 
-        internal static WhereOptionMatcher<T, TMatcher, TPredicateParam> Create(ref TMatcher previousMatcher,
-                                                           ValueProvider<T, TMatcher> valueProvider,
+        internal static WhereValueMatcher<T, TMatcher, TPredicateParam> Create(ref TMatcher previousMatcher,
+                                                           ValueProvider<ValueOrError<T>, TMatcher> valueProvider,
                                                            Evaluator<TMatcher> evaluator, Predicate<T, TPredicateParam> predicate, TPredicateParam param)
         {
-            return new WhereOptionMatcher<T, TMatcher, TPredicateParam>
+            return new WhereValueMatcher<T, TMatcher, TPredicateParam>
             {
                 _predicate = predicate,
                 _valueProvider = valueProvider,
@@ -200,12 +203,12 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             };
         }
 
-        private static readonly ValueProvider<T, WhereOptionMatcher<T, TMatcher, TPredicateParam>> WhereValueProvider = GetValue;
-        private static readonly Evaluator<WhereOptionMatcher<T, TMatcher, TPredicateParam>> WhereEvaluator = Evaluate;
+        private static readonly ValueProvider<ValueOrError<T>, WhereValueMatcher<T, TMatcher, TPredicateParam>> WhereValueProvider = GetValue;
+        private static readonly Evaluator<WhereValueMatcher<T, TMatcher, TPredicateParam>> WhereEvaluator = Evaluate;
 
 
         private Evaluator<TMatcher> _evaluator;
-        private ValueProvider<T, TMatcher> _valueProvider;
+        private ValueProvider<ValueOrError<T>, TMatcher> _valueProvider;
         private TMatcher _previous;
         private Predicate<T, TPredicateParam> _predicate;
         private TPredicateParam _param;
@@ -213,29 +216,29 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
         private bool _skip;
 
 
-        public OptionMatcher<T, WhereOptionMatcher<T, TMatcher, TPredicateParam>> Do(DelegateAction<T> action)
+        public VoEMatcher<T, WhereValueMatcher<T, TMatcher, TPredicateParam>> Do(DelegateAction<T> action)
         {
             if (!_skip)
             {
                 _action = action;
             }
-            return OptionMatcher<T, WhereOptionMatcher<T, TMatcher, TPredicateParam>>.Create(ref this, WhereValueProvider, WhereEvaluator, !_skip);
+            return VoEMatcher<T, WhereValueMatcher<T, TMatcher, TPredicateParam>>.Create(ref this, WhereValueProvider, WhereEvaluator, !_skip);
         }
 
-        public OptionMatcher<T, WhereOptionMatcherParam<T, TMatcher, TPredicateParam, TActionParam>> Do<TActionParam>(DelegateAction<T, TActionParam> action,
+        public VoEMatcher<T, WhereValueMatcherParam<T, TMatcher, TPredicateParam, TActionParam>> Do<TActionParam>(DelegateAction<T, TActionParam> action,
                                                                                                                     TActionParam param)
         {
             var proxy = _skip 
-            ? WhereOptionMatcherParam < T, TMatcher, TPredicateParam, TActionParam>.CreateSkip(ref _previous, _valueProvider, _evaluator)
-            : WhereOptionMatcherParam<T, TMatcher, TPredicateParam, TActionParam>.Create(ref _previous, _valueProvider, _evaluator,
+            ? WhereValueMatcherParam < T, TMatcher, TPredicateParam, TActionParam>.CreateSkip(ref _previous, _valueProvider, _evaluator)
+            : WhereValueMatcherParam<T, TMatcher, TPredicateParam, TActionParam>.Create(ref _previous, _valueProvider, _evaluator,
                                                                                           _predicate, _param, action, param);
-            var vp = WhereOptionMatcherParam<T, TMatcher, TPredicateParam, TActionParam>.WhereValueProvider;
-            var e = WhereOptionMatcherParam<T, TMatcher, TPredicateParam, TActionParam>.WhereEvaluator;
-            return OptionMatcher<T, WhereOptionMatcherParam<T, TMatcher, TPredicateParam, TActionParam>>.Create(
+            var vp = WhereValueMatcherParam<T, TMatcher, TPredicateParam, TActionParam>.WhereValueProvider;
+            var e = WhereValueMatcherParam<T, TMatcher, TPredicateParam, TActionParam>.WhereEvaluator;
+            return VoEMatcher<T, WhereValueMatcherParam<T, TMatcher, TPredicateParam, TActionParam>>.Create(
                 ref proxy, vp, e, !_skip);
         }
 
-        private static bool Evaluate(ref WhereOptionMatcher<T, TMatcher, TPredicateParam> matcher)
+        private static bool Evaluate(ref WhereValueMatcher<T, TMatcher, TPredicateParam> matcher)
         {
             var m = matcher._previous;
             var intermediateResult = matcher._evaluator(ref m);
@@ -247,8 +250,9 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             {
                 return false;
             }
-            T value;
-            matcher._valueProvider(ref m, out value);
+            ValueOrError<T> voe;
+            matcher._valueProvider(ref m, out voe);
+            var value = voe.Value;
             var result = matcher._predicate(value, matcher._param);
             if (result)
             {
@@ -256,21 +260,21 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             }
             return result;
         }
-        private static void GetValue(ref WhereOptionMatcher<T, TMatcher, TPredicateParam> matcher, out T value)
+        private static void GetValue(ref WhereValueMatcher<T, TMatcher, TPredicateParam> matcher, out ValueOrError<T> value)
         {
             matcher._valueProvider(ref matcher._previous, out value);
         }
     }
     #endregion
 
-    public struct WhereOptionMatcherParam<T, TMatcher, TPredicateParam, TActionParam>
+    public struct WhereValueMatcherParam<T, TMatcher, TPredicateParam, TActionParam>
     {
 
-        internal static WhereOptionMatcherParam<T, TMatcher, TPredicateParam, TActionParam> CreateSkip(ref TMatcher previousMatcher,
-                                                           ValueProvider<T, TMatcher> valueProvider,
+        internal static WhereValueMatcherParam<T, TMatcher, TPredicateParam, TActionParam> CreateSkip(ref TMatcher previousMatcher,
+                                                           ValueProvider<ValueOrError<T>, TMatcher> valueProvider,
                                                            Evaluator<TMatcher> evaluator)
         {
-            return new WhereOptionMatcherParam<T, TMatcher, TPredicateParam, TActionParam>
+            return new WhereValueMatcherParam<T, TMatcher, TPredicateParam, TActionParam>
             {
                 _previous = previousMatcher,
                 _valueProvider = valueProvider,
@@ -280,15 +284,15 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
         }
 
 
-        internal static WhereOptionMatcherParam<T, TMatcher, TPredicateParam, TActionParam> Create(ref TMatcher previousMatcher,
-                                                           ValueProvider<T, TMatcher> valueProvider,
+        internal static WhereValueMatcherParam<T, TMatcher, TPredicateParam, TActionParam> Create(ref TMatcher previousMatcher,
+                                                           ValueProvider<ValueOrError<T>, TMatcher> valueProvider,
                                                            Evaluator<TMatcher> evaluator,
                                                            Predicate<T, TPredicateParam> predicate,
                                                            TPredicateParam predicateParam,
                                                            DelegateAction<T, TActionParam> action,
                                                            TActionParam actionParam)
         {
-            return new WhereOptionMatcherParam<T, TMatcher, TPredicateParam, TActionParam>
+            return new WhereValueMatcherParam<T, TMatcher, TPredicateParam, TActionParam>
             {
                 _predicate = predicate,
                 _valueProvider = valueProvider,
@@ -300,12 +304,12 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             };
         }
 
-        internal static readonly ValueProvider<T, WhereOptionMatcherParam<T, TMatcher, TPredicateParam, TActionParam>> WhereValueProvider = GetValue;
-        internal static readonly Evaluator<WhereOptionMatcherParam<T, TMatcher, TPredicateParam, TActionParam>> WhereEvaluator = Evaluate;
+        internal static readonly ValueProvider<ValueOrError<T>, WhereValueMatcherParam<T, TMatcher, TPredicateParam, TActionParam>> WhereValueProvider = GetValue;
+        internal static readonly Evaluator<WhereValueMatcherParam<T, TMatcher, TPredicateParam, TActionParam>> WhereEvaluator = Evaluate;
 
 
         private Evaluator<TMatcher> _evaluator;
-        private ValueProvider<T, TMatcher> _valueProvider;
+        private ValueProvider<ValueOrError<T>, TMatcher> _valueProvider;
         private TMatcher _previous;
         private Predicate<T, TPredicateParam> _predicate;
         private TPredicateParam _predicateParam;
@@ -314,7 +318,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
         private bool _skip;
 
 
-        private static bool Evaluate(ref WhereOptionMatcherParam<T, TMatcher, TPredicateParam, TActionParam> matcher)
+        private static bool Evaluate(ref WhereValueMatcherParam<T, TMatcher, TPredicateParam, TActionParam> matcher)
         {
             var m = matcher._previous;
             var intermediateResult = matcher._evaluator(ref m);
@@ -326,8 +330,9 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             {
                 return false;
             }
-            T value;
-            matcher._valueProvider(ref m, out value);
+            ValueOrError<T> voe;
+            matcher._valueProvider(ref m, out voe);
+            var value = voe.Value;
             var result = matcher._predicate(value, matcher._predicateParam);
             if (result)
             {
@@ -335,7 +340,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             }
             return result;
         }
-        private static void GetValue(ref WhereOptionMatcherParam<T, TMatcher, TPredicateParam, TActionParam> matcher, out T value)
+        private static void GetValue(ref WhereValueMatcherParam<T, TMatcher, TPredicateParam, TActionParam> matcher, out ValueOrError<T> value)
         {
             matcher._valueProvider(ref matcher._previous, out value);
         }

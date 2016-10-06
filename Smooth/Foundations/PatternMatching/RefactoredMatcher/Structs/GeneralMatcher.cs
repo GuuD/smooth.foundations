@@ -5,23 +5,44 @@ using Smooth.PatternMatching.MatcherDelegates;
 
 namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
 {
-    internal struct BasicContainer<T>
+    public struct BasicContainer<T>
     {
         internal static BasicContainer<T> Create(T value)
         {
             return new BasicContainer<T> {_value = value};
         }
-        internal static ValueProvider<T, BasicContainer<T>> Provider = (ref BasicContainer<T> matcher, out T value) => value = matcher._value;
-        internal static Evaluator<BasicContainer<T>> Evaluator = (ref BasicContainer<T> previous) => false; 
+        private static readonly ValueProvider<T, BasicContainer<T>> Provider = (ref BasicContainer<T> matcher, out T value) => value = matcher._value;
+        private static readonly Evaluator<BasicContainer<T>> Evaluator = (ref BasicContainer<T> previous) => false; 
         private T _value;
+
+        public WhereMatcher<T, BasicContainer<T>> Where(Predicate<T> predicate)
+        {
+            return WhereMatcher<T, BasicContainer<T>>.Create(ref this, Provider, Evaluator, predicate);
+        }
+
+        public WhereMatcher<T, BasicContainer<T>, P> Where<P>(Predicate<T, P> predicate, P param)
+        {
+            return WhereMatcher<T, BasicContainer<T>, P>.Create(ref this, Provider, Evaluator, predicate, param);
+        }
+
+        public WithMatcher<T, BasicContainer<T>> With(T value)
+        {
+            return WithMatcher<T, BasicContainer<T>>.Create(ref this, Provider, Evaluator, value);
+        }
+
+        public BasicContainerResult<T, TResult> To<TResult>()
+        {
+            return BasicContainerResult<T, TResult>.Create(_value);
+        } 
     }
 
     public struct GeneralMatcher<T, TMatcher>
     {
-        private static readonly DelegateAction<T> EmptyAction = _ => { }; 
-        private Evaluator<TMatcher> _evaluator;
-        private ValueProvider<T, TMatcher> _valueProvider;
+        private static readonly DelegateAction<T> EmptyAction = _ => { };
         private TMatcher _previous;
+        private ValueProvider<T, TMatcher> _valueProvider;
+        private Evaluator<TMatcher> _evaluator;
+
 
         internal static GeneralMatcher<T, TMatcher> Create(ref TMatcher previous, ValueProvider<T, TMatcher> valueProvider,
             Evaluator<TMatcher> evaluator)

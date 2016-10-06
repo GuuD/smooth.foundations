@@ -1,19 +1,21 @@
 ﻿using System.Collections.Generic;
 using Smooth.Delegates;
+using Smooth.Foundations.Algebraics;
+using Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option;
 using Smooth.PatternMatching.MatcherDelegates;
 using Smooth.Pools;
 using Smooth.Slinq;
 
-namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
+namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.ValueOrError
 {
     #region Option Without Parameters
-    public struct OfOptionMatcher<T, TMatcher>
+    public struct OfValueMatcher<T, TMatcher>
     {
-        internal static OfOptionMatcher<T, TMatcher> CreateSkip(ref TMatcher previousMatcher,
-                                                                ValueProvider<T, TMatcher> valueProvider,
+        internal static OfValueMatcher<T, TMatcher> CreateSkip(ref TMatcher previousMatcher,
+                                                                ValueProvider<ValueOrError<T>, TMatcher> valueProvider,
                                                                 Evaluator<TMatcher> evaluator)
         {
-            return new OfOptionMatcher<T, TMatcher>
+            return new OfValueMatcher<T, TMatcher>
             {
                 _previous = previousMatcher,
                 _valueProvider = valueProvider,
@@ -22,12 +24,12 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             };
         }   
 
-        internal static OfOptionMatcher<T, TMatcher> Create(ref TMatcher previousMatcher,
-                                                        ValueProvider<T, TMatcher> valueProvider,
+        internal static OfValueMatcher<T, TMatcher> Create(ref TMatcher previousMatcher,
+                                                        ValueProvider<ValueOrError<T>, TMatcher> valueProvider,
                                                         Evaluator<TMatcher> evaluator,
                                                         T value)
         {
-            var matcher = new OfOptionMatcher<T, TMatcher>
+            var matcher = new OfValueMatcher<T, TMatcher>
             {
                 _values = ListPool<T>.Instance.Borrow(),
                 _valueProvider = valueProvider,
@@ -37,18 +39,18 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             matcher._values.Add(value);
             return matcher;
         }
-        private static readonly Evaluator<OfOptionMatcher<T, TMatcher>> OfEvaluator = Evaluate;
-        private static readonly ValueProvider<T, OfOptionMatcher<T, TMatcher>> OfValueProvider = GetValue;
+        private static readonly Evaluator<OfValueMatcher<T, TMatcher>> OfEvaluator = Evaluate;
+        private static readonly ValueProvider<ValueOrError<T>, OfValueMatcher<T, TMatcher>> OfValueProvider = GetValue;
 
         private Evaluator<TMatcher> _evaluator;
-        private ValueProvider<T, TMatcher> _valueProvider;
+        private ValueProvider<ValueOrError<T>, TMatcher> _valueProvider;
         private TMatcher _previous;
         private bool _skip;
 
         private List<T> _values;
         private DelegateAction<T> _action;
 
-        public OfOptionMatcher<T, TMatcher> Or(T value)
+        public OfValueMatcher<T, TMatcher> Or(T value)
         {
             if (_skip)
             {
@@ -58,28 +60,28 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             return this;
         }
 
-        public OptionMatcher<T, OfOptionMatcher<T, TMatcher>> Do(DelegateAction<T> action)
+        public VoEMatcher<T, OfValueMatcher<T, TMatcher>> Do(DelegateAction<T> action)
         {
             if (!_skip)
             {
                 _action = action;
             }
-            return OptionMatcher<T, OfOptionMatcher<T, TMatcher>>.Create(ref this, OfValueProvider, OfEvaluator, !_skip);
+            return VoEMatcher<T, OfValueMatcher<T, TMatcher>>.Create(ref this, OfValueProvider, OfEvaluator, !_skip);
         }
 
-        public OptionMatcher<T, OfOptionMatcherParam<T, TMatcher, TActionParam>> Do<TActionParam>(DelegateAction<T, TActionParam> action,
+        public VoEMatcher<T, OfValueMatcherParam<T, TMatcher, TActionParam>> Do<TActionParam>(DelegateAction<T, TActionParam> action,
             TActionParam param)
         {
             var proxy = _skip 
-                ? OfOptionMatcherParam <T, TMatcher, TActionParam>.CreateSkip(ref _previous, _valueProvider, _evaluator) 
-                : OfOptionMatcherParam<T, TMatcher, TActionParam>.Create(ref _previous, _valueProvider, _evaluator, _values,
+                ? OfValueMatcherParam <T, TMatcher, TActionParam>.CreateSkip(ref _previous, _valueProvider, _evaluator) 
+                : OfValueMatcherParam<T, TMatcher, TActionParam>.Create(ref _previous, _valueProvider, _evaluator, _values,
                 action, param);
-            var vp = OfOptionMatcherParam<T, TMatcher, TActionParam>.OfValueProvider;
-            var e = OfOptionMatcherParam<T, TMatcher, TActionParam>.OfEvaluator;
-            return OptionMatcher<T, OfOptionMatcherParam<T, TMatcher, TActionParam>>.Create(ref proxy, vp, e, !_skip);
+            var vp = OfValueMatcherParam<T, TMatcher, TActionParam>.OfValueProvider;
+            var e = OfValueMatcherParam<T, TMatcher, TActionParam>.OfEvaluator;
+            return VoEMatcher<T, OfValueMatcherParam<T, TMatcher, TActionParam>>.Create(ref proxy, vp, e, !_skip);
         }
 
-        private static bool Evaluate(ref OfOptionMatcher<T, TMatcher> matcher)
+        private static bool Evaluate(ref OfValueMatcher<T, TMatcher> matcher)
         {
             var m = matcher._previous;
             var intermediateResult = matcher._evaluator(ref m);
@@ -91,8 +93,9 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             {
                 return false;
             }
-            T value;
-            matcher._valueProvider(ref m, out value);
+            ValueOrError<T> voe;
+            matcher._valueProvider(ref m, out voe);
+            var value = voe.Value;
             var result = matcher._values.Slinq().Contains(value);
             if (result)
             {
@@ -101,7 +104,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             ListPool<T>.Instance.Release(matcher._values);
             return result;
         }
-        private static void GetValue(ref OfOptionMatcher<T, TMatcher> matcher, out T value)
+        private static void GetValue(ref OfValueMatcher<T, TMatcher> matcher, out ValueOrError<T> value)
         {
             matcher._valueProvider(ref matcher._previous, out value);
         }
@@ -109,14 +112,14 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
     #endregion
 
     #region Option With Action Parameter
-    public struct OfOptionMatcherParam<T, TMatcher, TActionParam>
+    public struct OfValueMatcherParam<T, TMatcher, TActionParam>
     {
 
-        internal static OfOptionMatcherParam<T, TMatcher, TActionParam> CreateSkip(ref TMatcher previousMatcher,
-            ValueProvider<T, TMatcher> valueProvider,
+        internal static OfValueMatcherParam<T, TMatcher, TActionParam> CreateSkip(ref TMatcher previousMatcher,
+            ValueProvider<ValueOrError<T>, TMatcher> valueProvider,
             Evaluator<TMatcher> evaluator)
         {
-            return new OfOptionMatcherParam<T, TMatcher, TActionParam>
+            return new OfValueMatcherParam<T, TMatcher, TActionParam>
             {
                 _previous = previousMatcher,
                 _evaluator = evaluator,
@@ -125,14 +128,14 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             };
         }
 
-        internal static OfOptionMatcherParam<T, TMatcher, TActionParam> Create(ref TMatcher previousMatcher,
-                                                                      ValueProvider<T, TMatcher> valueProvider,
+        internal static OfValueMatcherParam<T, TMatcher, TActionParam> Create(ref TMatcher previousMatcher,
+                                                                      ValueProvider<ValueOrError<T>, TMatcher> valueProvider,
                                                                       Evaluator<TMatcher> evaluator,
                                                                       List<T> values,
                                                                       DelegateAction<T, TActionParam> action,
                                                                       TActionParam param)
         {
-            return new OfOptionMatcherParam<T, TMatcher, TActionParam>
+            return new OfValueMatcherParam<T, TMatcher, TActionParam>
             {
                 _values = values,
                 _valueProvider = valueProvider,
@@ -142,18 +145,18 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
                 _param = param
             };
         }
-        internal static readonly Evaluator<OfOptionMatcherParam<T, TMatcher, TActionParam>> OfEvaluator = Evaluate;
-        internal static readonly ValueProvider<T, OfOptionMatcherParam<T, TMatcher, TActionParam>> OfValueProvider = GetValue;
+        internal static readonly Evaluator<OfValueMatcherParam<T, TMatcher, TActionParam>> OfEvaluator = Evaluate;
+        internal static readonly ValueProvider<ValueOrError<T>, OfValueMatcherParam<T, TMatcher, TActionParam>> OfValueProvider = GetValue;
 
         private Evaluator<TMatcher> _evaluator;
-        private ValueProvider<T, TMatcher> _valueProvider;
+        private ValueProvider<ValueOrError<T>, TMatcher> _valueProvider;
         private TMatcher _previous;
         private List<T> _values;
         private DelegateAction<T, TActionParam> _action;
         private TActionParam _param;
         private bool _skip;
 
-        private static bool Evaluate(ref OfOptionMatcherParam<T, TMatcher, TActionParam> matcher)
+        private static bool Evaluate(ref OfValueMatcherParam<T, TMatcher, TActionParam> matcher)
         {
             var m = matcher._previous;
             var intermediateResult = matcher._evaluator(ref m);
@@ -166,8 +169,9 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
                 return false;
             }
 
-            T value;
-            matcher._valueProvider(ref m, out value);
+            ValueOrError<T> voe;
+            matcher._valueProvider(ref m, out voe);
+            var value = voe.Value;
             var result = matcher._values.Slinq().Contains(value);
             if (result)
             {
@@ -176,7 +180,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             ListPool<T>.Instance.Release(matcher._values);
             return result;
         }
-        private static void GetValue(ref OfOptionMatcherParam<T, TMatcher, TActionParam> matcher, out T value)
+        private static void GetValue(ref OfValueMatcherParam<T, TMatcher, TActionParam> matcher, out ValueOrError<T> value)
         {
             matcher._valueProvider(ref matcher._previous, out value);
         }

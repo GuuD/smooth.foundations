@@ -5,20 +5,34 @@ using Smooth.PatternMatching.MatcherDelegates;
 
 namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
 {
-
-    internal struct BasicContainerResult<T, TResult>
+    public struct BasicContainerResult<T, TResult>
     {
         internal static BasicContainerResult<T, TResult> Create(T value)
         {
             return new BasicContainerResult<T, TResult> {_value = value};
-        } 
-        internal static ValueProvider<T, BasicContainerResult<T, TResult>> Provider = (ref BasicContainerResult<T, TResult> matcher, out T value) => value = matcher._value;
-        internal static Evaluator<BasicContainerResult<T, TResult>, TResult> Evaluator = (ref BasicContainerResult<T, TResult> previous, out TResult result) =>
+        }
+        private static readonly ValueProvider<T, BasicContainerResult<T, TResult>> Provider = (ref BasicContainerResult<T, TResult> matcher, out T value) => value = matcher._value;
+        private static readonly Evaluator<BasicContainerResult<T, TResult>, TResult> Evaluator = (ref BasicContainerResult<T, TResult> previous, out TResult result) =>
         {
             result = default(TResult);
             return false;
         };
         private T _value;
+
+        public WhereMatcherResult<T, BasicContainerResult<T, TResult>, TResult> Where(Predicate<T> predicate)
+        {
+            return WhereMatcherResult<T, BasicContainerResult<T, TResult>, TResult>.Create(ref this, Provider, Evaluator, predicate);
+        }
+
+        public WhereMatcherResult<T, BasicContainerResult<T, TResult>, TPredicateParam, TResult> Where<TPredicateParam>(Predicate<T, TPredicateParam> predicate, TPredicateParam param)
+        {
+            return WhereMatcherResult<T, BasicContainerResult<T, TResult>, TPredicateParam, TResult>.Create(ref this, Provider, Evaluator, predicate, param);
+        }
+
+        public WithMatcherResult<T, BasicContainerResult<T, TResult>, TResult> With(T value)
+        {
+            return WithMatcherResult<T, BasicContainerResult<T, TResult>, TResult>.Create(ref this, Provider, Evaluator, value);
+        }
     }
 
     public struct GeneralMatcherResult<T, TMatcher, TResult>

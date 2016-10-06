@@ -46,7 +46,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
                WhereValueProvider, WhereEvaluator);
         }
 
-        public GeneralMatcherResult<T, WhereMatcherResultParam<T, TMatcher, TFuncParam, TResult>, TResult> Do<TFuncParam>(DelegateFunc<T, TFuncParam, TResult> func, TFuncParam param)
+        public GeneralMatcherResult<T, WhereMatcherResultParam<T, TMatcher, TFuncParam, TResult>, TResult> Return<TFuncParam>(DelegateFunc<T, TFuncParam, TResult> func, TFuncParam param)
         {
             var proxy = WhereMatcherResultParam<T, TMatcher, TFuncParam, TResult>.Create(ref _previous, _valueProvider, _evaluator,
                 _predicate, func, param);
@@ -187,7 +187,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
                WhereValueProvider, WhereEvaluator);
         }
 
-        public GeneralMatcherResult<T, WhereMatcherResultParam<T, TMatcher, TPredicateParam, TFuncParam, TResult>, TResult> Do<TFuncParam>(DelegateFunc<T, TFuncParam, TResult> func, TFuncParam param)
+        public GeneralMatcherResult<T, WhereMatcherResultParam<T, TMatcher, TPredicateParam, TFuncParam, TResult>, TResult> Return<TFuncParam>(DelegateFunc<T, TFuncParam, TResult> func, TFuncParam param)
         {
             var proxy = WhereMatcherResultParam<T, TMatcher, TPredicateParam, TFuncParam, TResult>.Create(ref _previous, _valueProvider, _evaluator,
                 _predicate, _predicateParam, func, param);
