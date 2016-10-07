@@ -101,10 +101,12 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             var intermediateResult = matcher._evaluator(ref m, out res);
             if (intermediateResult)
             {
+                ListPool<T>.Instance.Release(matcher._values);
                 return true;
             }
             if (matcher._skip)
             {
+                ListPool<T>.Instance.Release(matcher._values);
                 return false;
             }
             T value;
@@ -175,10 +177,12 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option
             var intermediateResult = matcher._evaluator(ref m, out res);
             if (intermediateResult)
             {
+                ListPool<T>.Instance.Release(matcher._values);
                 return true;
             }
             if (matcher._skip)
             {
+                ListPool<T>.Instance.Release(matcher._values);
                 return false;
             }
 

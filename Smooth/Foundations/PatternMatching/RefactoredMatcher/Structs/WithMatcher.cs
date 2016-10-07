@@ -64,6 +64,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
             var intermediateResult = matcher._evaluator(ref m);
             if (intermediateResult)
             {
+                ListPool<T>.Instance.Release(matcher._values);
                 return true;
             }
 
@@ -121,6 +122,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
             var intermediateResult = matcher._evaluator(ref m);
             if (intermediateResult)
             {
+                ListPool<T>.Instance.Release(matcher._values);
                 return true;
             }
 

@@ -2,7 +2,6 @@
 using Smooth.Algebraics;
 using Smooth.Delegates;
 using Smooth.Foundations.Algebraics;
-using Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.Option;
 using Smooth.PatternMatching.MatcherDelegates;
 using Smooth.Pools;
 using Smooth.Slinq;
@@ -102,10 +101,12 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.ValueOrEr
             var intermediateResult = matcher._evaluator(ref m, out res);
             if (intermediateResult)
             {
+                ListPool<T>.Instance.Release(matcher._values);
                 return true;
             }
             if (matcher._skip)
             {
+                ListPool<T>.Instance.Release(matcher._values);
                 return false;
             }
             ValueOrError<T> voe;
@@ -177,10 +178,12 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs.ValueOrEr
             var intermediateResult = matcher._evaluator(ref m, out res);
             if (intermediateResult)
             {
+                ListPool<T>.Instance.Release(matcher._values);
                 return true;
             }
             if (matcher._skip)
             {
+                ListPool<T>.Instance.Release(matcher._values);
                 return false;
             }
             ValueOrError<T> voe;

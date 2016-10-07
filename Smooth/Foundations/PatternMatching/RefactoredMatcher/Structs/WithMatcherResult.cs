@@ -79,12 +79,13 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
             var intermediateResult = matcher._evaluator(ref m, out res);
             if (intermediateResult)
             {
+                ListPool<T>.Instance.Release(matcher._values);
                 return true;
             }
 
             T value;
             matcher._valueProvider(ref m, out value);
-            var match = matcher._values.Slinq().Contains(value);
+            var match = matcher._values.Contains(value);
             if (match)
             {
                 res = matcher.GetResult(value);
@@ -139,6 +140,7 @@ namespace Smooth.Foundations.PatternMatching.RefactoredMatcher.Structs
             var intermediateResult = matcher._evaluator(ref m, out res);
             if (intermediateResult)
             {
+                ListPool<T>.Instance.Release(matcher._values);
                 return true;
             }
 
